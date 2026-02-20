@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Y.Z</title>
+    <style>
+        /* TEMEL AYARLAR */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #1a1a1a;
+            --header-bg: #f8f9fa;
+            --user-bubble: #007bff;
+            --user-text: #ffffff;
+            --bot-text: #1a1a1a;
+            --accent-red: #ff4d4d;
+            --font-size: 16px;
+            --font-weight: 400;
+        }
+
+        .dark-theme {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --header-bg: #1a1a1a;
+            --bot-text: #ffffff;
+        }
+
+        body {
+            margin: 0; padding: 0;
+			width: 100vw; /* Ekranın tam genişliği */
+			overflow-x: hidden; /* Yatay kaydırmayı kesin olarak engeller */
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex; flex-direction: column;
+            height: 100vh; overflow: hidden;
+        }
+
+        /* ÜST BANNER */
+        header {
+            padding: 10px 15px;
+            background: var(--header-bg);
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid var(--user-bubble);
+        }
+
+        .date-time { line-height: 1.2; }
+        #time { font-size: 1.4rem; font-weight: 700; }
+        #date { font-size: 0.85rem; opacity: 0.8; }
+
+        .controls { display: flex; gap: 5px; }
+        .controls button {
+            border: 1px solid #ddd; background: white;
+            border-radius: 8px; padding: 5px; cursor: pointer; font-size: 0.9rem;
+        }
+
+        /* MESAJ ALANI */
+        #chat-container {
+            flex: 1; overflow-y: auto; padding: 20px 0;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .message { max-width: 100%; padding: 10px 15px; font-size: var(--font-size); font-weight: var(--font-weight); line-height: 1.6; }
+        
+        /* Giden Mesaj: Mavi Balon */
+        .user-msg {
+            align-self: flex-end;
+            background-color: var(--user-bubble);
+            color: var(--user-text);
+            border-radius: 18px 18px 0 18px;
+            margin-right: 15px; max-width: 80%;
+        }
+
+        /* Gelen Mesaj: Çerçevesiz Tam Genişlik */
+        .bot-msg {
+            align-self: flex-start;
+            background: transparent;
+            color: var(--bot-text);
+            width: 100%; margin: 0;
+			padding: 15px; /* Okunabilirlik için iç boşluk */
+			box-sizing: border-box; /* Padding dahil genişliği ayarlar, taşmayı önler */
+        }
+
+        /* Kırmızı Kalın Yazılar */
+        .bot-msg strong { color: var(--accent-red); font-weight: 700; }
+
+        /* BEKLEME ANİMASYONU */
+        .dots { display: flex; gap: 5px; padding: 10px 15px; }
+        .dot { width: 10px; height: 10px; background: var(--user-bubble); border-radius: 50%; opacity: 0.3; animation: blink 1.4s infinite; }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        /* ... 6 nokta için devam eder ... */
+
+        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+        /* ALT GİRİŞ ÇUBUĞU */
+        footer {
+            padding: 15px; background: var(--header-bg);
+            display: flex; gap: 10px; align-items: center;
+        }
+
+        .input-box {
+            flex: 1; border: 1px solid #ccc; border-radius: 25px;
+            padding: 10px 15px; background: var(--bg-color); color: var(--text-color);
+        }
+
+        .file-btn { font-size: 1.5rem; color: var(--user-bubble); cursor: pointer; }
+        .send-btn { background: var(--user-bubble); color: white; border: none; border-radius: 20px; padding: 10px 20px; font-weight: bold; }
+    </style>
+</head>
+<body id="main-body">
+
+    <header>
+        <div class="date-time">
+            <div id="time">10:30</div>
+            <div id="date">20 Şubat Cuma</div>
+        </div>
+        <div class="controls">
+            <button onclick="changeZoom(1)">🔍+</button>
+            <button onclick="changeZoom(-1)">🔍-</button>
+            <button onclick="toggleBold(true)">B+</button>
+            <button onclick="toggleBold(false)">B-</button>
+            <button onclick="setTheme('dark')">🌑</button>
+            <button onclick="setTheme('light')">☀️</button>
+        </div>
+    </header>
+
+    <main id="chat-container">
+        <div class="message user-msg">Selam, bugün hava nasıl?</div>
+        <div class="message bot-msg">Bugün gökyüzü <strong>parçalı bulutlu</strong> ve sıcaklık 15 derece civarında olacak.</div>
+    </main>
+
+    <div id="waiting" class="dots" style="display:none;">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+
+    <footer>
+        <label class="file-btn">+</label>
+        <input type="text" class="input-box" placeholder="Mesajınızı yazın...">
+       <button class="send-btn" onclick="sendMessage()">Gönder</button>
+    </footer>
+
+    <script>
+	
+	// Mesaj gönderme fonksiyonu
+const API_KEY = 'AIzaSyCl7FDwq98P20hwIJrQUFxu5mbd35Q1ZGI';
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`;
+
+async function sendMessage() {
+    const input = document.querySelector('.input-box');
+    const messageText = input.value.trim();
+    if (messageText === "") return;
+
+    addMessage(messageText, 'user-msg');
+    input.value = "";
+    showLoading(true);
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: messageText }] }]
+            })
+        });
+
+        const data = await response.json();
+        let botResponse = data.candidates[0].content.parts[0].text;
+
+        // Filtreleme: Parantez içindeki linkleri temizle
+        botResponse = botResponse.replace(/\((https?:\/\/[^\s]+)\)/g, '');
+
+        showLoading(false);
+        
+        // Kelime kelime yazdırma fonksiyonunu çağırıyoruz
+        typeWriterEffect(botResponse);
+
+    } catch (error) {
+        showLoading(false);
+        addMessage("Hata: API bağlantısı kurulamadı. " + error.message, 'bot-msg');
+    }
+}
+
+function typeWriterEffect(text) {
+    const chatContainer = document.getElementById('chat-container');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message bot-msg';
+    chatContainer.appendChild(msgDiv);
+
+    const words = text.split(' ');
+    let i = 0;
+
+    const interval = setInterval(() => {
+        if (i < words.length) {
+            // Kalın yazıları kırmızıya çevirme mantığını burada uyguluyoruz
+            let word = words[i];
+            if (word.startsWith('**') && word.endsWith('**')) {
+                word = `<strong>${word.replace(/\*\*/g, '')}</strong> `;
+            } else {
+                word += ' ';
+            }
+            
+            msgDiv.innerHTML += word;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            i++;
+        } else {
+            clearInterval(interval);
+        }
+    }, 500); // 0.5 saniye hızında
+}
+
+// Ekrana yeni mesaj balonu ekleyen yardımcı fonksiyon
+function addMessage(text, className) {
+    const chatContainer = document.getElementById('chat-container');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${className}`;
+    msgDiv.innerHTML = text; // HTML desteği için (Kalın/Kırmızı yazılar için)
+    
+    chatContainer.appendChild(msgDiv);
+    
+    // Her mesaj eklendiğinde en aşağı kaydır
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+// Yükleme animasyonunu aç/kapat
+function showLoading(isVisible) {
+    const loading = document.getElementById('waiting');
+    loading.style.display = isVisible ? 'flex' : 'none';
+    if (isVisible) {
+        loading.scrollIntoView();
+    }
+}
+	// Global değişkenler: Ayarların durumunu saklar
+let currentFontSize = 16;
+let isBold = false;
+
+// Yazı Boyutu Değiştirme (Y+ / Y-)
+function changeZoom(step) {
+    currentFontSize += (step * 2); // Her basışta 2 birim büyüt/küçült
+    if (currentFontSize < 12) currentFontSize = 12; // Çok küçülmesini engelle
+    if (currentFontSize > 30) currentFontSize = 30; // Çok büyümesini engelle
+    
+    // Mesaj alanındaki tüm yazıların boyutunu güncelle
+    document.getElementById('chat-container').style.setProperty('--font-size', currentFontSize + 'px');
+}
+
+// Yazı Kalınlığı Değiştirme (B+ / B-)
+function toggleBold(status) {
+    isBold = status;
+    const weight = isBold ? '700' : '400';
+    document.getElementById('chat-container').style.setProperty('--font-weight', weight);
+}
+
+// Tema Değiştirme (🌑 / ☀️)
+function setTheme(mode) {
+    const body = document.getElementById('main-body');
+    if (mode === 'dark') {
+        body.classList.add('dark-theme');
+    } else {
+        body.classList.remove('dark-theme');
+    }
+}
+	function updateDateTime() {
+    const now = new Date();
+    
+    // Saati formatla (Örn: 14:05)
+    const timeString = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    
+    // Tarihi formatla (Örn: 20 Şubat Cuma)
+    const options = { day: 'numeric', month: 'long', weekday: 'long' };
+    const dateString = now.toLocaleDateString('tr-TR', options);
+    
+    document.getElementById('time').textContent = timeString;
+    document.getElementById('date').textContent = dateString;
+}
+
+// Her saniye güncelle
+setInterval(updateDateTime, 1000);
+updateDateTime(); // Sayfa açılınca hemen çalıştır
+        // Tema ve Font Fonksiyonları buraya gelecek
+        function setTheme(mode) {
+            document.getElementById('main-body').className = (mode === 'dark' ? 'dark-theme' : '');
+        }
+        // Diğer butonlar için JavaScript'i bir sonraki adımda yazacağız.
+    </script>
+</body>
+</html>
