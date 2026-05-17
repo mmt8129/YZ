@@ -2,400 +2,281 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Y.Z</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot - DuckDuckGo AI</title>
     <style>
-        /* TEMEL AYARLAR */
-        :root {
-            --bg-color: #ffffff;
-            --text-color: #1a1a1a;
-            --header-bg: #f8f9fa;
-            --user-bubble: #007bff;
-            --user-text: #ffffff;
-            --bot-text: #1a1a1a;
-            --accent-red: #ff4d4d;
-            --font-size: 16px;
-            --font-weight: 400;
-        }
-
-        .dark-theme {
-            --bg-color: #000000;
-            --text-color: #ffffff;
-            --header-bg: #1a1a1a;
-            --bot-text: #ffffff;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            margin: 0; padding: 0;
-			width: 100vw; /* Ekranın tam genişliği */
-			overflow-x: hidden; /* Yatay kaydırmayı kesin olarak engeller */
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex; flex-direction: column;
-            height: 100vh; overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+            min-height: 100vh;
         }
 
-        /* ÜST BANNER */
-        header {
-            padding: 10px 15px;
-            background: var(--header-bg);
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 2px solid var(--user-bubble);
-        }
-
-        .date-time { line-height: 1.2; }
-        #time { font-size: 1.4rem; font-weight: 700; }
-        #date { font-size: 0.85rem; opacity: 0.8; }
-
-        .controls { display: flex; gap: 5px; }
-        .controls button {
-            border: 1px solid #ddd; background: white;
-            border-radius: 8px; padding: 5px; cursor: pointer; font-size: 0.9rem;
-        }
-
-        /* MESAJ ALANI */
         #chat-container {
-            flex: 1; overflow-y: auto; padding: 20px 0;
-            display: flex; flex-direction: column; gap: 20px;
+            background: white;
+            border-radius: 15px;
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
-        .message { max-width: 100%; padding: 10px 15px; font-size: var(--font-size); font-weight: var(--font-weight); line-height: 1.6; }
-        
-        /* Giden Mesaj: Mavi Balon */
-        .user-msg {
-            align-self: flex-end;
-            background-color: var(--user-bubble);
-            color: var(--user-text);
-            border-radius: 18px 18px 0 18px;
-            margin-right: 15px; max-width: 80%;
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
         }
 
-        /* Gelen Mesaj: Çerçevesiz Tam Genişlik */
-        .bot-msg {
-            align-self: flex-start;
-            background: transparent;
-            color: var(--bot-text);
-            width: 100%; margin: 0;
-			padding: 15px; /* Okunabilirlik için iç boşluk */
-			box-sizing: border-box; /* Padding dahil genişliği ayarlar, taşmayı önler */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Kırmızı Kalın Yazılar */
-        .bot-msg strong { color: #ff4d4d !important; /* Canlı bir kırmızı */
-    font-weight: bold; display: inline-block; /* Boşlukların düzgün görünmesi için */ }
-
-        /* BEKLEME ANİMASYONU */
-        .dots { display: flex; gap: 5px; padding: 10px 15px; }
-        .dot { width: 10px; height: 10px; background: var(--user-bubble); border-radius: 50%; opacity: 0.3; animation: blink 1.4s infinite; }
-        .dot:nth-child(2) { animation-delay: 0.2s; }
-        .dot:nth-child(3) { animation-delay: 0.4s; }
-        /* ... 6 nokta için devam eder ... */
-
-        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
-
-        /* ALT GİRİŞ ÇUBUĞU */
-        footer {
-            padding: 15px; background: var(--header-bg);
-            display: flex; gap: 10px; align-items: center;
+        .user-message {
+            background: #e3f2fd;
+            padding: 12px 16px;
+            border-radius: 15px 15px 5px 15px;
+            margin-left: 20px;
+            color: #1565c0;
+            font-weight: 500;
         }
 
-        .input-box {
-            flex: 1; border: 1px solid #ccc; border-radius: 25px;
-            padding: 10px 15px; background: var(--bg-color); color: var(--text-color);
+        .bot-response {
+            background: white;
+            padding: 20px;
+            border-radius: 15px 15px 15px 5px;
+            border: 1px solid #e0e0e0;
         }
 
-        .file-btn { font-size: 1.5rem; color: var(--user-bubble); cursor: pointer; }
-        .send-btn { background: var(--user-bubble); color: white; border: none; border-radius: 20px; padding: 10px 20px; font-weight: bold; }
+        .ai-text {
+            line-height: 1.7;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .images-grid img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .images-grid img:hover {
+            transform: scale(1.05);
+        }
+
+        .loading-text {
+            text-align: center;
+            color: #999;
+            padding: 15px;
+            font-size: 14px;
+        }
+
+        .model-selector {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .model-btn {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            background: white;
+            cursor: pointer;
+            font-size: 11px;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .model-btn.active {
+            background: #1a73e8;
+            color: white;
+            border-color: #1a73e8;
+        }
+
+        #input-container {
+            display: flex;
+            gap: 12px;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #user-input:focus {
+            border-color: #1a73e8;
+        }
+
+        #send-btn {
+            padding: 14px 24px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        #send-btn:hover {
+            background: #1557b0;
+        }
+
+        #send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
-<body id="main-body">
-
-    <header>
-        <div class="date-time">
-            <div id="time">10:30</div>
-            <div id="date">20 Şubat Cuma</div>
+<body>
+    <div id="chat-container">
+        <div style="text-align: center; color: #999; padding-top: 150px;">
+            <div style="font-size: 48px; margin-bottom: 15px;">🦆</div>
+            <div>Sorunu yaz, DuckDuckGo AI cevaplasın</div>
         </div>
-        <div class="controls">
-            <button onclick="changeZoom(1)">🔍+</button>
-            <button onclick="changeZoom(-1)">🔍-</button>
-            <button onclick="toggleBold(true)">B+</button>
-            <button onclick="toggleBold(false)">B-</button>
-            <button onclick="setTheme('dark')">🌑</button>
-            <button onclick="setTheme('light')">☀️</button>
-        </div>
-    </header>
-
-    <main id="chat-container">
-        <div class="message user-msg">Selam, bugün hava nasıl?</div>
-        <div class="message bot-msg">Bugün gökyüzü <strong>parçalı bulutlu</strong> ve sıcaklık 15 derece civarında olacak.</div>
-    </main>
-
-    <div id="waiting" class="dots" style="display:none;">
-        <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
     </div>
 
-    <footer>
-        <label class="file-btn">+</label><button class="add-btn" onclick="document.getElementById('file-input').click()">+</button>
-<input type="file" id="file-input" style="display: none;" accept="image/*" onchange="handleFileUpload(event)">
-        <input type="text" class="input-box" placeholder="Mesajınızı yazın...">
-       <button class="send-btn" onclick="sendMessage()">Gönder</button>
-    </footer>
+    <div id="input-container">
+        <input type="text" id="user-input" placeholder="Bir şey sor..." />
+        <button id="send-btn">Gönder</button>
+    </div>
 
     <script>
-	let selectedFileData = null;
-let selectedFileType = null;
-let API_KEY = localStorage.getItem('gemini_api_key') || "";
+        const WORKER_URL = 'https://snowy-pine-831b.06mmt8129.workers.dev';
+        let selectedModel = 'gpt-4o-mini';
 
-// --- 1. SAAT FONKSİYONU ---
-function updateTime() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    // Eğer HTML'de saatin id'si 'current-time' ise:
-    const timeElement = document.getElementById('current-time');
-    if (timeElement) timeElement.textContent = `${hours}:${minutes}`;
-}
-setInterval(updateTime, 1000);
-updateTime();
+        document.getElementById('send-btn').addEventListener('click', sendMessage);
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
 
-// --- 2. DOSYA YÜKLEME MANTIĞI ---
-function handleFileUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+        async function sendMessage() {
+            const userInput = document.getElementById('user-input').value.trim();
+            if (!userInput) return;
 
-    selectedFileType = file.type;
-    const reader = new FileReader();
+            const container = document.getElementById('chat-container');
+            if (container.querySelector('div[style*="text-align: center"]')) {
+                container.innerHTML = '';
+            }
 
-    reader.onload = function(e) {
-        const base64Data = e.target.result.split(',')[1];
-        selectedFileData = base64Data;
-        
-        let previewHTML = file.type.startsWith('image/') 
-            ? `<img src="${e.target.result}" style="max-width:150px; border-radius:10px; margin-top:5px;">`
-            : `📄 <strong>Dosya Eklendi:</strong> ${file.name}`;
-        
-        addMessage(previewHTML, 'user-msg');
-    };
+            appendMessage('user', userInput);
+            document.getElementById('user-input').value = '';
+            
+            // Yükleniyor göster
+            const loadingDiv = appendMessage('bot', '<em>Düşünüyor...</em>');
+            document.getElementById('send-btn').disabled = true;
 
-    if (file.type === "text/plain") {
-        const textReader = new FileReader();
-        textReader.onload = (e) => {
-            const input = document.querySelector('.input-box');
-            input.value += `\n[Dosya İçeriği]: ${e.target.result}`;
-            addMessage(`📑 Metin dosyası okundu: ${file.name}`, 'user-msg');
-        };
-        textReader.readAsText(file);
-    } else {
-        reader.readAsDataURL(file);
-    }
-}
-
-// --- 3. MESAJ GÖNDERME ---
-async function sendMessage() {
-    const input = document.querySelector('.input-box');
-    const messageText = input.value.trim();
-    
-    if (messageText === "" && !selectedFileData) return;
-
-    if (messageText !== "") addMessage(messageText, 'user-msg');
-    input.value = "";
-
-    // Anahtar yoksa ilk mesajı anahtar olarak kabul et
-    if (!API_KEY || API_KEY === "") {
-        API_KEY = messageText;
-        localStorage.setItem('gemini_api_key', API_KEY);
-        typeWriterEffect("🔑 Anahtar kaydedildi! Sayfayı yenilemenize gerek yok, artık yazışabiliriz.");
-        return;
-    }
-
-    showLoading(true);
-
-    try {
-        const parts = [];
-        if (messageText !== "") parts.push({ text: messageText });
-        else if (selectedFileData) parts.push({ text: "Bu dosyayı analiz et." });
-
-        if (selectedFileData) {
-            parts.push({
-                inline_data: {
-                    mime_type: selectedFileType,
-                    data: selectedFileData
-                }
-            });
-        }
-
-        // Dinamik URL: Anahtarı her zaman güncel halinden alır
-const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+            try {
+                // DuckDuckGo AI Chat'e istek
+                const chatResponse = await fetch(`${WORKER_URL}/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: parts }],
-                        tools: [{ google_search: {} }]
+                        message: userInput,
+                        model: selectedModel
                     })
                 });
+
+                const chatData = await chatResponse.json();
+
+                if (chatData.error) {
+                    throw new Error(chatData.error);
+                }
+
+                // Yükleniyor mesajını güncelle
+                updateMessageWithResponse(loadingDiv, chatData.response, userInput);
                 
-                const data = await response.json();
-                showLoading(false);
+                // Görselleri çek
+                fetchImages(userInput, loadingDiv);
 
-        if (data.candidates && data.candidates[0]) {
-            const botResponse = data.candidates[0].content.parts[0].text;
-            showLoading(false);
-            typeWriterEffect(botResponse);
-        } else {
-            throw new Error(data.error?.message || "Cevap alınamadı.");
-        }
-    } catch (error) {
-        showLoading(false);
-        addMessage("⚠️ Hata: " + error.message, 'bot-msg');
-    } finally {
-        selectedFileData = null;
-        selectedFileType = null;
-        const fileInput = document.getElementById('file-input');
-        if (fileInput) fileInput.value = "";
-    }
-}
-
-// --- 4. YARDIMCI FONKSİYONLAR (Eksik olmasın) ---
-function addMessage(text, className) {
-    const chatContainer = document.getElementById('chat-container');
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${className}`;
-    msgDiv.innerHTML = text;
-    chatContainer.appendChild(msgDiv);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-function showLoading(show) {
-    let loader = document.getElementById('loader');
-    if (show) {
-        if (!loader) {
-            loader = document.createElement('div');
-            loader.id = 'loader';
-            loader.className = 'message bot-msg';
-            loader.innerHTML = '<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>';
-            document.getElementById('chat-container').appendChild(loader);
-        }
-    } else if (loader) {
-        loader.remove();
-    }
-}
-
-function typeWriterEffect(text) {
-    const chatContainer = document.getElementById('chat-container');
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'message bot-msg';
-    chatContainer.appendChild(msgDiv);
-
-    const words = text.split(' ');
-    let i = 0;
-
-    const interval = setInterval(() => {
-        if (i < words.length) {
-            let word = words[i];
-            
-            // YILDIZ KONTROLÜ: Kelime içinde herhangi bir yerde ** var mı?
-            if (word.includes('**')) {
-                // Tüm yıldızları temizle ve kırmızı yap
-                let cleanText = word.replace(/\*\*/g, '');
-                word = `<strong style="color: #ff4d4d; font-weight: bold;">${cleanText}</strong>`;
+            } catch (error) {
+                updateMessage(loadingDiv, '❌ Hata: ' + error.message);
+            } finally {
+                document.getElementById('send-btn').disabled = false;
             }
-
-            msgDiv.innerHTML += word + ' '; // Her kelimeden sonra boşluk ekle
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            i++;
-        } else {
-            clearInterval(interval);
         }
-    }, 50); // İdeal hız
-}
 
-// Ekrana yeni mesaj balonu ekleyen yardımcı fonksiyon
-function addMessage(text, className) {
-    const chatContainer = document.getElementById('chat-container');
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${className}`;
-    msgDiv.innerHTML = text; // HTML desteği için (Kalın/Kırmızı yazılar için)
-    
-    chatContainer.appendChild(msgDiv);
-    
-    // Her mesaj eklendiğinde en aşağı kaydır
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
+        async function fetchImages(query, messageDiv) {
+            const imagesContainer = messageDiv.querySelector('.images-container');
+            if (!imagesContainer) return;
 
-// Yükleme animasyonunu aç/kapat
-function showLoading(isVisible) {
-    const loading = document.getElementById('waiting');
-    loading.style.display = isVisible ? 'flex' : 'none';
-    if (isVisible) {
-        loading.scrollIntoView();
-    }
-}
-	// Global değişkenler: Ayarların durumunu saklar
-let currentFontSize = 16;
-let isBold = false;
+            try {
+                const response = await fetch(`${WORKER_URL}/images?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
 
-// Yazı Boyutu Değiştirme (Y+ / Y-)
-function changeZoom(step) {
-    currentFontSize += (step * 2); // Her basışta 2 birim büyüt/küçült
-    if (currentFontSize < 12) currentFontSize = 12; // Çok küçülmesini engelle
-    if (currentFontSize > 30) currentFontSize = 30; // Çok büyümesini engelle
-    
-    // Mesaj alanındaki tüm yazıların boyutunu güncelle
-    document.getElementById('chat-container').style.setProperty('--font-size', currentFontSize + 'px');
-}
-
-// Yazı Kalınlığı Değiştirme (B+ / B-)
-function toggleBold(status) {
-    isBold = status;
-    const weight = isBold ? '700' : '400';
-    document.getElementById('chat-container').style.setProperty('--font-weight', weight);
-}
-
-// Tema Değiştirme (🌑 / ☀️)
-function setTheme(mode) {
-    const body = document.getElementById('main-body');
-    if (mode === 'dark') {
-        body.classList.add('dark-theme');
-    } else {
-        body.classList.remove('dark-theme');
-    }
-}
-	function updateDateTime() {
-    const now = new Date();
-    
-    // Saati formatla (Örn: 14:05)
-    const timeString = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-    
-    // Tarihi formatla (Örn: 20 Şubat Cuma)
-    const options = { day: 'numeric', month: 'long', weekday: 'long' };
-    const dateString = now.toLocaleDateString('tr-TR', options);
-    
-    document.getElementById('time').textContent = timeString;
-    document.getElementById('date').textContent = dateString;
-}
-
-// Her saniye güncelle
-setInterval(updateDateTime, 1000);
-updateDateTime(); // Sayfa açılınca hemen çalıştır
-        // Tema ve Font Fonksiyonları buraya gelecek
-        function setTheme(mode) {
-            document.getElementById('main-body').className = (mode === 'dark' ? 'dark-theme' : '');
+                if (data.images && data.images.length > 0) {
+                    let imagesHTML = '<div class="images-grid">';
+                    data.images.forEach(img => {
+                        imagesHTML += `
+                            <img src="${img.thumbnail}" 
+                                 alt="${img.title}" 
+                                 onclick="window.open('${img.image}', '_blank')"
+                                 onerror="this.style.display='none'"
+                                 title="${img.title}">
+                        `;
+                    });
+                    imagesHTML += '</div>';
+                    imagesContainer.innerHTML = imagesHTML;
+                } else {
+                    imagesContainer.innerHTML = '';
+                }
+            } catch (error) {
+                imagesContainer.innerHTML = '';
+            }
         }
-        // Diğer butonlar için JavaScript'i bir sonraki adımda yazacağız.
-		
-		window.onload = checkApiKey;
-		function checkApiKey() {
-    const savedKey = localStorage.getItem('gemini_api_key');
-    
-    if (!savedKey) {
-        // Eğer anahtar yoksa, kullanıcıya ne yapması gerektiğini söyleyen bir bot mesajı gönder
-        addMessage("🤖 Merhaba! Henüz bir API anahtarı tanımlanmamış. Lütfen sohbeti başlatmak için Gemini API anahtarını mesaj kutusuna yazıp gönderir misin? 🔑", 'bot-msg');
-    } else {
-        // Eğer anahtar varsa, normal bir selamlama yapabilir
-        addMessage("🤖 Hazırım! Bugün sana nasıl yardımcı olabilirim?", 'bot-msg');
-    }
-}
+
+        function updateMessageWithResponse(messageDiv, response, query) {
+            messageDiv.innerHTML = `
+                <div class="bot-response">
+                    <div class="ai-text">${response.replace(/\n/g, '<br>')}</div>
+                    <div class="images-container">
+                        <div class="loading-text">🖼️ Görseller yükleniyor...</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateMessage(messageDiv, content) {
+            messageDiv.innerHTML = `<div class="bot-response">${content}</div>`;
+        }
+
+        function appendMessage(role, content) {
+            const container = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            if (role === 'user') {
+                messageDiv.innerHTML = `<div class="user-message">${content}</div>`;
+            } else {
+                messageDiv.innerHTML = `<div class="bot-response">${content}</div>`;
+            }
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+            
+            return messageDiv;
+        }
     </script>
 </body>
 </html>
