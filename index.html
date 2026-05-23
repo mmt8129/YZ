@@ -219,37 +219,83 @@
             font-size: 14px;
             padding: 6px 0;
         }
-        .message-bubble.received .ai-content {
+
+        /* Sekme butonları - XP tarzı */
+        .tabs-container {
+            display: flex;
+            gap: 0;
+            margin-bottom: 2px;
+            flex-shrink: 0;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 6px 12px;
+            border: 1px solid #0055e5;
+            background: #e8e8e8;
+            color: #333;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            transition: 0.1s ease;
+            outline: none;
+            white-space: nowrap;
+        }
+        .tab-btn:first-child {
+            border-radius: 4px 0 0 0;
+        }
+        .tab-btn:last-child {
+            border-radius: 0 4px 0 0;
+        }
+        .tab-btn.active {
+            background: linear-gradient(180deg, #0058ee 0%, #3a8cf5 8%, #0055e5 40%, #0044cc 100%);
+            color: #fff;
+            border-color: #0044cc;
+        }
+        .tab-btn:not(.active):hover {
+            background: #d0d0d0;
+        }
+
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* AI Cevap içeriği */
+        .ai-content {
             padding: 0;
             min-height: 20px;
             line-height: 1.5;
             color: #111b21;
         }
-        .message-bubble.received .ai-content p {
+        .ai-content p {
             margin: 4px 0;
         }
-        .message-bubble.received .ai-content strong {
+        .ai-content strong {
             font-weight: 600;
         }
-        .message-bubble.received .ai-content em {
+        .ai-content em {
             font-style: italic;
         }
-        .message-bubble.received .ai-content ul,
-        .message-bubble.received .ai-content ol {
+        .ai-content ul,
+        .ai-content ol {
             margin: 4px 0;
             padding-left: 18px;
         }
-        .message-bubble.received .ai-content li {
+        .ai-content li {
             margin: 1px 0;
         }
-        .message-bubble.received .ai-content code {
+        .ai-content code {
             background: #f1f3f4;
             padding: 2px 5px;
             border-radius: 3px;
             font-size: 13px;
             font-family: 'SF Mono', 'Consolas', monospace;
         }
-        .message-bubble.received .ai-content pre {
+        .ai-content pre {
             background: #1e1e1e;
             color: #d4d4d4;
             padding: 10px;
@@ -258,25 +304,25 @@
             margin: 6px 0;
             font-size: 12px;
         }
-        .message-bubble.received .ai-content pre code {
+        .ai-content pre code {
             background: transparent;
             color: inherit;
             padding: 0;
         }
-        .message-bubble.received .ai-content a {
+        .ai-content a {
             color: #1a73e8;
             text-decoration: none;
             pointer-events: none;
             cursor: default;
         }
-        .message-bubble.received .ai-content h1,
-        .message-bubble.received .ai-content h2,
-        .message-bubble.received .ai-content h3 {
+        .ai-content h1,
+        .ai-content h2,
+        .ai-content h3 {
             margin: 6px 0 3px;
             font-weight: 600;
             font-size: 15px;
         }
-        .message-bubble.received .ai-content blockquote {
+        .ai-content blockquote {
             border-left: 2px solid #4285f4;
             padding-left: 8px;
             color: #666;
@@ -301,24 +347,20 @@
             }
         }
 
-        /* Sohbet içi resim galerisi */
+        /* Sohbet içi resim galerisi (7 resim yatay) */
         .images-gallery {
             display: flex;
             gap: 4px;
             overflow-x: auto;
             padding: 2px 0 6px 0;
             margin-bottom: 4px;
-            scrollbar-width: thin;
+            scrollbar-width: none;
             -webkit-overflow-scrolling: touch;
             border: 1px solid rgba(0, 0, 0, 0.06);
             border-radius: 8px;
         }
         .images-gallery::-webkit-scrollbar {
-            height: 3px;
-        }
-        .images-gallery::-webkit-scrollbar-thumb {
-            background: #d0d0d0;
-            border-radius: 10px;
+            display: none;
         }
         .images-gallery .gallery-item {
             flex: 0 0 auto;
@@ -345,6 +387,66 @@
             justify-content: center;
             color: #bbb;
             font-size: 24px;
+        }
+
+        /* Görseller sekmesi grid */
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+        }
+        .images-grid .grid-item {
+            aspect-ratio: 1 / 1;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            background: #f0f0f0;
+        }
+        .images-grid .grid-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Yenile butonu */
+        .reload-images-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #0055e5;
+            border-radius: 6px;
+            background: linear-gradient(180deg, #fff 0%, #ece9d8 100%);
+            color: #000;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            text-align: center;
+            transition: 0.1s ease;
+            margin-bottom: 4px;
+        }
+        .reload-images-btn:hover {
+            filter: brightness(1.03);
+        }
+
+        /* Daha Fazla butonu */
+        .load-more-btn {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            border: 1px solid #0055e5;
+            border-radius: 6px;
+            background: linear-gradient(180deg, #0058ee 0%, #3a8cf5 8%, #0055e5 40%, #0044cc 100%);
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            text-align: center;
+            transition: 0.1s ease;
+        }
+        .load-more-btn:hover {
+            filter: brightness(1.1);
         }
 
         .copy-btn {
@@ -822,14 +924,16 @@
 
             let isProcessing = false;
             let autoScrollActive = true;
-            const STORAGE_KEY = 'groqbot_chat_v6';
-            const HISTORY_KEY = 'groqbot_hist_v3';
+            const STORAGE_KEY = 'groqbot_chat_v7';
+            const HISTORY_KEY = 'groqbot_hist_v4';
+            const IMG_CACHE_KEY = 'groqbot_img_cache';
             let cooldownTimer = null;
             let cooldownSeconds = 0;
             const COOLDOWN_DURATION = 12;
 
-            // Resim anahtar kelimeleri
-            const IMAGE_KEYWORDS = ['resim', 'resmini', 'resmi', 'resimini', 'resmini', 'afişini', 'afiş resmini', 'afiş resimini', 'profil resmini', 'profil resimini', 'profil fotosunu', 'profil fotoğrafını', 'fotoğraf', 'fotoğrafını', 'foto', 'fotoyu', 'görsel', 'görselini', 'afiş', 'afişini', 'poster', 'kapak', 'ss', 'ekran görüntüsü', 'fotograf'];
+            const IMAGE_KEYWORDS = ['resim', 'resmini', 'resmi', 'fotoğraf', 'fotoğrafını', 'foto', 'fotoyu',
+                'görsel', 'görselini', 'afiş', 'afişini', 'poster', 'kapak', 'ss', 'ekran görüntüsü', 'fotograf'
+            ];
 
             // ==================== COOLDOWN ====================
             function startCooldown() {
@@ -867,10 +971,35 @@
                 timerBar.textContent = `⏳ ${cooldownSeconds} saniye sonra tekrar sorabilirsin`;
             }
 
-            // ==================== RESİM ANAHTARI KONTROLÜ ====================
+            // ==================== RESİM ANAHTARI ====================
             function hasImageKeyword(text) {
                 const lower = text.toLowerCase();
                 return IMAGE_KEYWORDS.some(kw => lower.includes(kw));
+            }
+
+            // ==================== RESİM ÖNBELLEK ====================
+            function getImgCache() {
+                try { return JSON.parse(localStorage.getItem(IMG_CACHE_KEY) || '{}'); } catch (e) { return {}; }
+            }
+
+            function saveImgCache(cache) {
+                try { localStorage.setItem(IMG_CACHE_KEY, JSON.stringify(cache)); } catch (e) {}
+            }
+
+            function isMsgCached(msgId) {
+                const cache = getImgCache();
+                return !!cache[msgId];
+            }
+
+            function cacheMsgImages(msgId, urls) {
+                const cache = getImgCache();
+                cache[msgId] = urls;
+                saveImgCache(cache);
+            }
+
+            function getCachedImages(msgId) {
+                const cache = getImgCache();
+                return cache[msgId] || [];
             }
 
             // ==================== LOCAL STORAGE ====================
@@ -880,7 +1009,8 @@
                     const bubble = w.querySelector('.message-bubble');
                     if (!bubble) return;
                     const type = w.classList.contains('sent') ? 'sent' : 'received';
-                    const msgData = { type, textContent: '', imageUrls: [] };
+                    const msgId = w.dataset.msgId || '';
+                    const msgData = { type, textContent: '', imageUrls: [], msgId };
                     if (type === 'sent') {
                         msgData.textContent = bubble.textContent.replace(/📋/g, '').trim();
                     } else {
@@ -912,12 +1042,31 @@
             function appendReceivedFromStorage(msgData) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'message-wrapper received';
+                wrapper.dataset.msgId = msgData.msgId || '';
                 const bubble = document.createElement('div');
                 bubble.className = 'message-bubble received';
+
                 if (msgData.imageUrls && msgData.imageUrls.length > 0) {
-                    const gallery = createImagesGallery(msgData.imageUrls);
-                    bubble.appendChild(gallery);
+                    const msgId = msgData.msgId;
+                    if (msgId && isMsgCached(msgId)) {
+                        const cached = getCachedImages(msgId);
+                        const tabsContainer = createTabsContainer(cached.slice(0, 7), cached);
+                        bubble.appendChild(tabsContainer);
+                    } else {
+                        const reloadBtn = createReloadButton(msgData.imageUrls.slice(0, 7), msgData.imageUrls,
+                            msgId);
+                        bubble.appendChild(reloadBtn);
+                        const content = document.createElement('div');
+                        content.className = 'ai-content';
+                        content.innerHTML = msgData.textContent || '';
+                        bubble.appendChild(content);
+                        addCopyButton(wrapper, bubble, 'received');
+                        wrapper.appendChild(bubble);
+                        chatContainer.appendChild(wrapper);
+                        return;
+                    }
                 }
+
                 const content = document.createElement('div');
                 content.className = 'ai-content';
                 content.innerHTML = msgData.textContent || '';
@@ -927,7 +1076,136 @@
                 chatContainer.appendChild(wrapper);
             }
 
-            // ==================== RESİM GALERİSİ OLUŞTURMA ====================
+            // ==================== SEKME YAPISI ====================
+            function createTabsContainer(galleryImages, allImages) {
+                const container = document.createElement('div');
+
+                // Sekme butonları
+                const tabsContainer = document.createElement('div');
+                tabsContainer.className = 'tabs-container';
+                const tabAI = document.createElement('button');
+                tabAI.className = 'tab-btn active';
+                tabAI.textContent = '🤖 AI Cevap';
+                const tabImg = document.createElement('button');
+                tabImg.className = 'tab-btn';
+                tabImg.textContent = `🖼️ Görseller (${allImages.length})`;
+                tabsContainer.appendChild(tabAI);
+                tabsContainer.appendChild(tabImg);
+
+                // AI Cevap içeriği
+                const contentAI = document.createElement('div');
+                contentAI.className = 'tab-content active';
+                if (galleryImages.length > 0) {
+                    const gallery = createImagesGallery(galleryImages);
+                    contentAI.appendChild(gallery);
+                }
+                const aiText = document.createElement('div');
+                aiText.className = 'ai-content';
+                aiText.innerHTML = '<span class="cursor-blink"></span>';
+                contentAI.appendChild(aiText);
+
+                // Görseller içeriği
+                const contentImg = document.createElement('div');
+                contentImg.className = 'tab-content';
+                const grid = document.createElement('div');
+                grid.className = 'images-grid';
+                const visible = allImages.slice(0, 9);
+                renderGridItems(grid, visible);
+                contentImg.appendChild(grid);
+                if (allImages.length > 9) {
+                    const loadMoreBtn = document.createElement('button');
+                    loadMoreBtn.className = 'load-more-btn';
+                    loadMoreBtn.textContent = `+ Daha Fazla (${allImages.length - 9} resim)`;
+                    let offset = 9;
+                    loadMoreBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const next = allImages.slice(offset, offset + 9);
+                        renderGridItems(grid, next);
+                        offset += 9;
+                        if (offset >= allImages.length) {
+                            loadMoreBtn.textContent = '✓ Tümü Gösterildi';
+                            loadMoreBtn.disabled = true;
+                            loadMoreBtn.style.opacity = '0.6';
+                        } else {
+                            loadMoreBtn.textContent =
+                                `+ Daha Fazla (${allImages.length - offset} resim)`;
+                        }
+                    });
+                    contentImg.appendChild(loadMoreBtn);
+                }
+
+                container.appendChild(tabsContainer);
+                container.appendChild(contentAI);
+                container.appendChild(contentImg);
+
+                // Sekme geçişleri
+                tabAI.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    tabAI.classList.add('active');
+                    tabImg.classList.remove('active');
+                    contentAI.classList.add('active');
+                    contentImg.classList.remove('active');
+                });
+                tabImg.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    tabImg.classList.add('active');
+                    tabAI.classList.remove('active');
+                    contentImg.classList.add('active');
+                    contentAI.classList.remove('active');
+                });
+
+                return container;
+            }
+
+            function renderGridItems(grid, images) {
+                images.forEach(url => {
+                    const item = document.createElement('div');
+                    item.className = 'grid-item';
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.alt = 'Görsel';
+                    img.loading = 'lazy';
+                    img.onerror = function() { this.parentElement.style.display = 'none'; };
+                    item.appendChild(img);
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const allImgs = Array.from(grid.querySelectorAll('img')).map(i => i.src)
+                            .filter(s => s);
+                        openLightbox(allImgs, allImgs.indexOf(url));
+                    });
+                    grid.appendChild(item);
+                });
+            }
+
+            function createReloadButton(galleryUrls, allUrls, msgId) {
+                const btn = document.createElement('button');
+                btn.className = 'reload-images-btn';
+                btn.textContent = '🖼️ 7 resim mevcut — Yüklemek için tıkla';
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (msgId) cacheMsgImages(msgId, allUrls);
+                    const parent = btn.parentElement;
+                    const wrapper = parent.parentElement;
+                    const bubble = parent;
+                    const existingContent = bubble.querySelector('.ai-content');
+                    const textHTML = existingContent ? existingContent.innerHTML : '';
+                    bubble.innerHTML = '';
+                    const tabsContainer = createTabsContainer(allUrls.slice(0, 7), allUrls);
+                    bubble.appendChild(tabsContainer);
+                    const newAiContent = bubble.querySelector('.ai-content');
+                    if (newAiContent && textHTML) {
+                        newAiContent.innerHTML = textHTML;
+                    }
+                    if (wrapper) {
+                        const oldCopyBtn = wrapper.querySelector('.copy-btn');
+                        if (oldCopyBtn) oldCopyBtn.remove();
+                        addCopyButton(wrapper, bubble, 'received');
+                    }
+                });
+                return btn;
+            }
+
+            // ==================== RESİM GALERİSİ ====================
             function createImagesGallery(imageUrls) {
                 const gallery = document.createElement('div');
                 gallery.className = 'images-gallery';
@@ -938,13 +1216,7 @@
                     img.src = url;
                     img.alt = 'Görsel ' + (i + 1);
                     img.loading = 'lazy';
-                    img.onerror = function() {
-                        this.style.display = 'none';
-                        const placeholder = document.createElement('div');
-                        placeholder.className = 'img-placeholder';
-                        placeholder.textContent = '🖼️';
-                        item.appendChild(placeholder);
-                    };
+                    img.onerror = function() { this.parentElement.style.display = 'none'; };
                     item.appendChild(img);
                     item.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -955,7 +1227,7 @@
                 return gallery;
             }
 
-            // ==================== TAM EKRAN LIGHTBOX (XP) ====================
+            // ==================== TAM EKRAN LIGHTBOX ====================
             let lightboxImages = [];
             let lightboxIndex = 0;
             let lightboxScale = 1;
@@ -980,7 +1252,6 @@
                 overlay.className = 'lightbox-overlay';
                 overlay.id = 'lightboxOverlay';
 
-                // Header (XP mavi)
                 const header = document.createElement('div');
                 header.className = 'lightbox-header';
                 const closeBtn = document.createElement('button');
@@ -989,14 +1260,12 @@
                 closeBtn.addEventListener('click', closeLightbox);
                 header.appendChild(closeBtn);
 
-                // Ana resim alanı
                 const main = document.createElement('div');
                 main.className = 'lightbox-main';
                 const mainImg = document.createElement('img');
                 mainImg.src = images[startIndex];
                 mainImg.id = 'lightboxMainImg';
 
-                // Önceki butonu
                 if (images.length > 1) {
                     const prevBtn = document.createElement('button');
                     prevBtn.className = 'lightbox-nav prev';
@@ -1015,7 +1284,6 @@
 
                 main.appendChild(mainImg);
 
-                // Alt küçük resimler
                 const thumbs = document.createElement('div');
                 thumbs.className = 'lightbox-thumbs';
                 images.forEach((url, i) => {
@@ -1038,10 +1306,8 @@
                 overlay.appendChild(thumbs);
                 document.body.appendChild(overlay);
 
-                // Touch olayları
                 setupLightboxTouch(mainImg);
 
-                // Klavye
                 overlay.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') closeLightbox();
                     if (e.key === 'ArrowRight') navigateLightbox(1);
@@ -1089,7 +1355,7 @@
                 lightboxTranslateY = 0;
                 const mainImg = document.getElementById('lightboxMainImg');
                 if (mainImg) {
-                    mainImg.style.transform = `scale(1)`;
+                    mainImg.style.transform = 'scale(1)';
                 }
                 lastTouchDistance = 0;
             }
@@ -1141,7 +1407,8 @@
                         if (currentTransform.includes('scale')) {
                             const match = currentTransform.match(/scale\(([^)]+)\)/);
                             if (match) lightboxScale = parseFloat(match[1]);
-                            const translateMatch = currentTransform.match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
+                            const translateMatch = currentTransform.match(
+                                /translate\(([^,]+)px,\s*([^)]+)px\)/);
                             if (translateMatch) {
                                 lightboxTranslateX = parseFloat(translateMatch[1]);
                                 lightboxTranslateY = parseFloat(translateMatch[2]);
@@ -1258,13 +1525,15 @@
                 if (placeholderMsg) placeholderMsg.remove();
                 const wrapper = document.createElement('div');
                 wrapper.className = 'message-wrapper received';
+                const msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                wrapper.dataset.msgId = msgId;
                 const bubble = document.createElement('div');
                 bubble.className = 'message-bubble received';
 
-                // Resim galerisi (varsa)
                 if (imageUrls && imageUrls.length > 0) {
-                    const gallery = createImagesGallery(imageUrls);
-                    bubble.appendChild(gallery);
+                    cacheMsgImages(msgId, imageUrls);
+                    const tabsContainer = createTabsContainer(imageUrls.slice(0, 7), imageUrls);
+                    bubble.appendChild(tabsContainer);
                 }
 
                 const content = document.createElement('div');
@@ -1407,7 +1676,7 @@
                             api_key: TAVILY_API_KEY,
                             query: query,
                             search_depth: "basic",
-                            max_results: 5,
+                            max_results: 40,
                             include_images: true
                         })
                     });
@@ -1416,18 +1685,19 @@
                     console.log('🖼️ Tavily Resim:', data);
                     let images = [];
                     if (data.images && Array.isArray(data.images)) {
-                        images = data.images.slice(0, 5);
+                        images = data.images.slice(0, 40);
                     }
                     if (data.results && Array.isArray(data.results)) {
                         data.results.forEach(r => {
                             if (r.url && (r.url.match(/\.(jpg|jpeg|png|webp|gif)/i) || r.image)) {
                                 const imgUrl = r.image || r.url;
-                                if (!images.includes(imgUrl) && images.length < 5) {
+                                if (!images.includes(imgUrl) && images.length < 40) {
                                     images.push(imgUrl);
                                 }
                             }
                         });
                     }
+                    // Sağlam resimleri ayıklamak için hepsini döndür, gösterme sırasında elenecek
                     return images;
                 } catch (e) {
                     console.warn('Tavily Resim hatası:', e);
@@ -1437,27 +1707,24 @@
 
             function getImageSearchQuery(currentQuery) {
                 if (hasImageKeyword(currentQuery)) {
-                    // Mesajda resim anahtarı var, ama sadece "resmini göster" gibi kısa olabilir
                     const lower = currentQuery.toLowerCase().trim();
                     const isShortQuery = lower.length < 20 && IMAGE_KEYWORDS.some(kw => lower.includes(kw));
                     if (isShortQuery) {
-                        // Bir önceki kullanıcı mesajını bul
                         const hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
                         const userMessages = hist.filter(m => m.role === 'user');
                         if (userMessages.length > 0) {
                             const lastUserMsg = userMessages[userMessages.length - 1].text;
-                            // Resim anahtarlarını temizle
                             let clean = lastUserMsg;
                             IMAGE_KEYWORDS.forEach(kw => {
-    const escapedKw = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    clean = clean.replace(new RegExp(escapedKw, 'gi'), '').trim();
-});
+                                const escapedKw = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                clean = clean.replace(new RegExp(escapedKw, 'gi'), '').trim();
+                            });
                             return clean || lastUserMsg;
                         }
                     }
                     return currentQuery;
                 }
-                return null; // Resim anahtarı yok
+                return null;
             }
 
             // ==================== GROQ API ====================
@@ -1534,19 +1801,15 @@
                 appendTypingIndicator();
 
                 try {
-                    // TinyFish: metin ara
                     const ctx = await getInternetContext(query);
-
-                    // Tavily: resim ara (anahtar kelime varsa)
                     let imageUrls = null;
                     const imageQuery = getImageSearchQuery(query);
                     if (imageQuery) {
                         console.log('🖼️ Resim araması yapılacak:', imageQuery);
                         imageUrls = await callTavilyImages(imageQuery);
-                        console.log('🖼️ Bulunan resimler:', imageUrls ? imageUrls.length : 0);
+                        console.log('🖼️ Bulunan resimler (sağlam olmayanlar dahil):', imageUrls ? imageUrls.length :
+                            0);
                     }
-
-                    // Groq: cevap üret
                     const reply = await callGroq(query, ctx);
                     removeTypingIndicator();
                     const clean = cleanText(reply);
@@ -1612,6 +1875,7 @@
                     chatContainer.querySelectorAll('.message-wrapper').forEach(w => w.remove());
                     localStorage.removeItem(STORAGE_KEY);
                     localStorage.removeItem(HISTORY_KEY);
+                    localStorage.removeItem(IMG_CACHE_KEY);
                     if (!chatContainer.querySelector('#placeholderMsg')) {
                         const ph = document.createElement('div');
                         ph.id = 'placeholderMsg';
@@ -1655,10 +1919,9 @@
             window.addEventListener('beforeunload', () => saveMessages());
             setInterval(() => saveMessages(), 30000);
             init();
-            console.log('🤖 GroqBot v6 hazır abi!');
-            console.log('⏳ Cooldown:', COOLDOWN_DURATION, 'saniye');
-            console.log('🧠 Hafıza: Son 5 mesaj');
-            console.log('🖼️ Resim: Tavily ile anahtar kelime tetiklemeli');
+            console.log('🤖 GroqBot v7 hazır abi!');
+            console.log('🖼️ Sekmeli görsel sistemi aktif');
+            console.log('💾 Resim önbelleği:', IMG_CACHE_KEY);
         })();
     </script>
 </body>
