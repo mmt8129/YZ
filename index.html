@@ -1143,8 +1143,7 @@
                         if (currentTransform.includes('scale')) {
                             const match = currentTransform.match(/scale\(([^)]+)\)/);
                             if (match) lightboxScale = parseFloat(match[1]);
-                            const translateMatch = currentTransform.match(/translate\(([^,]+)px,\s*([^)]+)
-                                px\)/);
+                            const translateMatch = currentTransform.match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
                             if (translateMatch) {
                                 lightboxTranslateX = parseFloat(translateMatch[1]);
                                 lightboxTranslateY = parseFloat(translateMatch[2]);
