@@ -3,280 +3,747 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot - DuckDuckGo AI</title>
+    <title>GrokBot - Sohbet</title>
     <style>
+        :root {
+            --bg: #ffffff;
+            --chat-bg: #ffffff;
+            --sent-bg: #1a73e8;
+            --sent-text: #ffffff;
+            --received-text: #111b21;
+            --input-bg: #f5f5f5;
+            --header-bg: #f8f9fa;
+            --border: #e8e8e8;
+            --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f8f9fa;
-            min-height: 100vh;
+            font-family: var(--font);
+            background: #e8e8e8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
-
-        #chat-container {
-            background: white;
-            border-radius: 15px;
-            height: 500px;
-            overflow-y: auto;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .app-container {
+            width: 100%;
+            max-width: 550px;
+            height: 100vh;
+            max-height: 850px;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
         }
-
-        .message {
-            margin-bottom: 20px;
-            animation: fadeIn 0.3s ease;
+        @media (min-width: 551px) {
+            .app-container { height: 92vh; border-radius: 10px; margin: 2vh 0; }
         }
+        .header {
+            background: var(--header-bg);
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+            z-index: 10;
+            flex-shrink: 0;
+            min-height: 44px;
+        }
+        .header-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4285f4, #34a853, #fbbc05, #ea4335);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            color: white;
+            flex-shrink: 0;
+        }
+        .header-info { flex: 1; min-width: 0; }
+        .header-name { font-weight: 600; font-size: 14px; color: #111b21; line-height: 1.2; }
+        .header-status { font-size: 11px; color: #667781; display: flex; align-items: center; gap: 3px; }
+        .header-status .dot { width: 6px; height: 6px; border-radius: 50%; background: #31a24c; flex-shrink: 0; }
+        .header-actions { display: flex; gap: 4px; align-items: center; }
+        .btn-icon {
+            width: 30px; height: 30px; border-radius: 50%; border: none;
+            background: transparent; cursor: pointer; font-size: 15px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.15s ease; color: #777;
+        }
+        .btn-icon:hover { background: rgba(0,0,0,0.05); color: #333; }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+        .chat-container {
+            flex: 1; overflow-y: auto; overflow-x: hidden;
+            padding: 8px 14px; display: flex; flex-direction: column; gap: 4px;
+            background: var(--chat-bg); -webkit-overflow-scrolling: touch; position: relative;
+        }
+        .chat-container::-webkit-scrollbar { width: 4px; }
+        .chat-container::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 10px; }
+        .chat-container::-webkit-scrollbar-track { background: transparent; }
+
+        .scroll-bottom-btn {
+            position: fixed; bottom: 90px; right: 20px;
+            width: 38px; height: 38px; border-radius: 50%;
+            background: #fff; border: 1px solid #ddd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; z-index: 999;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; color: #555; transition: all 0.2s ease;
+            opacity: 0; transform: translateY(8px) scale(0.9); pointer-events: none;
+        }
+        .scroll-bottom-btn.visible {
+            opacity: 1; transform: translateY(0) scale(1); pointer-events: auto;
+        }
+        .scroll-bottom-btn:active { transform: scale(0.92); background: #f0f0f0; }
+
+        .message-wrapper {
+            display: flex; width: 100%; animation: messageSlideIn 0.25s ease;
+            position: relative; flex-shrink: 0;
+        }
+        .message-wrapper.sent { justify-content: flex-end; }
+        .message-wrapper.received { justify-content: flex-start; }
+        @keyframes messageSlideIn {
+            from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .message-bubble.sent {
+            background: var(--sent-bg); color: var(--sent-text);
+            max-width: 78%; padding: 8px 13px; border-radius: 14px 4px 14px 14px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word;
+            line-height: 1.4; font-size: 14px; position: relative;
+        }
+        .message-bubble.received {
+            background: transparent; color: var(--received-text);
+            width: 100%; word-wrap: break-word; line-height: 1.5;
+            font-size: 14px; padding: 6px 0;
+        }
+        .message-bubble.received .ai-content {
+            padding: 0; min-height: 20px; line-height: 1.5; color: #111b21;
+        }
+        .message-bubble.received .ai-content p { margin: 4px 0; }
+        .message-bubble.received .ai-content strong { font-weight: 600; }
+        .message-bubble.received .ai-content em { font-style: italic; }
+        .message-bubble.received .ai-content ul, .message-bubble.received .ai-content ol { margin: 4px 0; padding-left: 18px; }
+        .message-bubble.received .ai-content li { margin: 1px 0; }
+        .message-bubble.received .ai-content code {
+            background: #f1f3f4; padding: 2px 5px; border-radius: 3px;
+            font-size: 13px; font-family: 'SF Mono', 'Consolas', monospace;
+        }
+        .message-bubble.received .ai-content pre {
+            background: #1e1e1e; color: #d4d4d4; padding: 10px;
+            border-radius: 5px; overflow-x: auto; margin: 6px 0; font-size: 12px;
+        }
+        .message-bubble.received .ai-content pre code { background: transparent; color: inherit; padding: 0; }
+        .message-bubble.received .ai-content a { color: #1a73e8; text-decoration: none; pointer-events: none; cursor: default; }
+        .message-bubble.received .ai-content h1, .message-bubble.received .ai-content h2, .message-bubble.received .ai-content h3 {
+            margin: 6px 0 3px; font-weight: 600; font-size: 15px;
+        }
+        .message-bubble.received .ai-content blockquote {
+            border-left: 2px solid #4285f4; padding-left: 8px; color: #666; margin: 4px 0;
+        }
+        .cursor-blink {
+            display: inline-block; width: 2px; height: 15px; background: #111b21;
+            margin-left: 1px; animation: blink 0.7s infinite; vertical-align: text-bottom;
+        }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
 
-        .user-message {
-            background: #e3f2fd;
-            padding: 12px 16px;
-            border-radius: 15px 15px 5px 15px;
-            margin-left: 20px;
-            color: #1565c0;
-            font-weight: 500;
+        .copy-btn {
+            position: absolute; bottom: -2px; right: 2px; width: 24px; height: 24px;
+            border-radius: 10px; border: none; background: transparent; cursor: pointer;
+            font-size: 12px; display: flex; align-items: center; justify-content: center;
+            color: #aaa; transition: all 0.15s ease; opacity: 0; z-index: 2;
+        }
+        .message-wrapper:hover .copy-btn, .message-wrapper:active .copy-btn { opacity: 1; }
+        .copy-btn:hover { background: rgba(0,0,0,0.06); color: #555; }
+        .copy-btn.copied { color: #34a853; font-weight: bold; }
+        .message-wrapper.sent .copy-btn { color: rgba(255,255,255,0.7); right: 4px; bottom: 0px; }
+        .message-wrapper.sent .copy-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .message-wrapper.received .copy-btn { right: -2px; bottom: -2px; }
+
+        .typing-indicator { display: flex; align-items: center; gap: 3px; padding: 8px 0; }
+        .typing-indicator span {
+            width: 7px; height: 7px; border-radius: 50%; background: #bbb;
+            animation: typingBounce 1.2s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce {
+            0%,60%,100% { transform: translateY(0); opacity: 0.3; }
+            30% { transform: translateY(-6px); opacity: 1; }
         }
 
-        .bot-response {
-            background: white;
-            padding: 20px;
-            border-radius: 15px 15px 15px 5px;
-            border: 1px solid #e0e0e0;
+        .input-area {
+            background: var(--input-bg); padding: 6px 10px;
+            display: flex; align-items: flex-end; gap: 6px;
+            border-top: 1px solid var(--border); flex-shrink: 0; z-index: 10;
         }
-
-        .ai-text {
-            line-height: 1.7;
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 15px;
+        .input-wrapper { flex: 1; position: relative; }
+        .input-wrapper textarea {
+            width: 100%; padding: 9px 12px; border-radius: 18px;
+            border: 1px solid #ddd; font-size: 14px; outline: none;
+            background: #fff; font-family: var(--font); transition: 0.15s ease;
+            color: #111b21; resize: none; overflow-y: auto;
+            min-height: 36px; max-height: 130px; line-height: 1.35;
+            -webkit-overflow-scrolling: touch;
         }
-
-        .images-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 15px 0;
+        .input-wrapper textarea:focus { border-color: #4285f4; box-shadow: 0 0 0 2px rgba(66,133,244,0.1); }
+        .input-wrapper textarea::placeholder { color: #999; }
+        .send-btn {
+            width: 38px; height: 38px; border-radius: 50%; border: none;
+            background: #4285f4; color: #fff; cursor: pointer; font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: all 0.15s ease; margin-bottom: 1px;
         }
+        .send-btn:hover { background: #3367d6; }
+        .send-btn:active { transform: scale(0.93); background: #2a56c6; }
+        .send-btn:disabled { background: #b0c4de; cursor: not-allowed; transform: none; }
 
-        .images-grid img {
-            width: 100%;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.2s;
+        .xp-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            z-index: 10000; display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.12s ease;
         }
-
-        .images-grid img:hover {
-            transform: scale(1.05);
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .xp-dialog {
+            background: #fff; border: 2px solid #0055e5; border-radius: 8px 8px 0 0;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.4); width: 300px; max-width: 90vw;
+            overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 12px;
         }
-
-        .loading-text {
-            text-align: center;
-            color: #999;
-            padding: 15px;
-            font-size: 14px;
+        .xp-titlebar {
+            background: linear-gradient(180deg, #0058ee 0%, #3a8cf5 8%, #0055e5 40%, #0044cc 100%);
+            color: #fff; padding: 5px 7px; font-weight: 700; font-size: 12px;
+            display: flex; align-items: center; gap: 5px;
         }
-
-        .model-selector {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 10px;
+        .xp-body {
+            padding: 16px 14px; display: flex; align-items: flex-start; gap: 10px;
+            font-size: 12px; color: #000; line-height: 1.4;
         }
-
-        .model-btn {
-            padding: 5px 10px;
-            border: 1px solid #ddd;
-            border-radius: 15px;
-            background: white;
-            cursor: pointer;
-            font-size: 11px;
-            color: #666;
-            transition: all 0.2s;
+        .xp-body .xp-warn-icon { font-size: 24px; flex-shrink: 0; }
+        .xp-buttons {
+            display: flex; justify-content: flex-end; gap: 6px;
+            padding: 8px 12px; background: #ece9d8; border-top: 1px solid #d4d0c8;
         }
-
-        .model-btn.active {
-            background: #1a73e8;
-            color: white;
-            border-color: #1a73e8;
+        .xp-btn {
+            padding: 4px 16px; border: 1px solid #003c74; border-radius: 3px;
+            font-size: 11px; cursor: pointer; font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-weight: 500; min-width: 60px; transition: all 0.08s ease; outline: none;
         }
-
-        #input-container {
-            display: flex;
-            gap: 12px;
+        .xp-btn:active { transform: translateY(1px); }
+        .xp-btn.ok {
+            background: linear-gradient(180deg, #fff 0%, #ece9d8 100%);
+            color: #000; border-color: #0055e5; box-shadow: 0 0 0 1px #0055e5; font-weight: 600;
         }
+        .xp-btn.cancel { background: linear-gradient(180deg, #fff 0%, #ece9d8 100%); color: #000; border-color: #999; }
+        .xp-btn:hover { filter: brightness(1.03); }
 
-        #user-input {
-            flex: 1;
-            padding: 14px 18px;
-            border: 2px solid #e0e0e0;
-            border-radius: 25px;
-            font-size: 15px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        #user-input:focus {
-            border-color: #1a73e8;
-        }
-
-        #send-btn {
-            padding: 14px 24px;
-            background: #1a73e8;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: 600;
-        }
-
-        #send-btn:hover {
-            background: #1557b0;
-        }
-
-        #send-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
+        @media (max-width: 400px) {
+            .chat-container { padding: 6px 10px; gap: 3px; }
+            .message-bubble.sent { max-width: 85%; font-size: 13px; padding: 7px 11px; }
+            .message-bubble.received { font-size: 13px; }
+            .header { padding: 5px 10px; min-height: 38px; }
+            .header-avatar { width: 26px; height: 26px; font-size: 13px; }
+            .header-name { font-size: 13px; }
+            .input-wrapper textarea { font-size: 13px; padding: 8px 10px; }
+            .send-btn { width: 34px; height: 34px; font-size: 14px; }
         }
     </style>
 </head>
 <body>
-    <div id="chat-container">
-        <div style="text-align: center; color: #999; padding-top: 150px;">
-            <div style="font-size: 48px; margin-bottom: 15px;">🦆</div>
-            <div>Sorunu yaz, DuckDuckGo AI cevaplasın</div>
+    <div class="app-container" id="appContainer">
+        <div class="header">
+            <div class="header-avatar">🤖</div>
+            <div class="header-info">
+                <div class="header-name">GrokBot</div>
+                <div class="header-status"><span class="dot"></span> çevrimiçi</div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" id="clearBtn" title="Sohbeti Temizle">🗑️</button>
+            </div>
+        </div>
+        <div class="chat-container" id="chatContainer">
+            <div style="text-align:center;color:#bbb;padding:40px 20px;font-size:13px;line-height:1.5;" id="placeholderMsg">
+                👋 Selam abi!<br>Sorunu yaz, Grok cevaplasın.
+            </div>
+            <button class="scroll-bottom-btn" id="scrollBottomBtn" title="En alta in">⬇</button>
+        </div>
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea id="userInput" placeholder="Bir şey sor abi..." rows="1" autocomplete="off"></textarea>
+            </div>
+            <button class="send-btn" id="sendBtn" title="Gönder">➤</button>
         </div>
     </div>
 
-    <div id="input-container">
-        <input type="text" id="user-input" placeholder="Bir şey sor..." />
-        <button id="send-btn">Gönder</button>
-    </div>
-
     <script>
-        const WORKER_URL = 'https://snowy-pine-831b.06mmt8129.workers.dev';
-        let selectedModel = 'gpt-4o-mini';
+        (function() {
+            // ==================== API AYARLARI ====================
+            const PROXY_URL = "https://autumn-dew-1884.06mmt8129.workers.dev/";
+            const ENCRYPTED_GROK_KEY = 'g*s*k*_*o*R*j*m*G*d*W*Q*K*p*0*i*9*c*0*B*l*k*M*B*W*G*d*y*b*3*F*Y*a*8*l*Q*l*X*R*6*t*4*1*l*m*x*p*Z*h*o*H*H*x*V*v*x';
+            const TINYFISH_API_KEY = 'sk-tinyfish-1eSfgKZ9ix8nwCraXIoCrC7UJe_CVrwU';
 
-        document.getElementById('send-btn').addEventListener('click', sendMessage);
-        document.getElementById('user-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') sendMessage();
-        });
+            function decryptAPIKey(key) { return key.split('*').join(''); }
+            const GROK_API_KEY = decryptAPIKey(ENCRYPTED_GROK_KEY);
 
-        async function sendMessage() {
-            const userInput = document.getElementById('user-input').value.trim();
-            if (!userInput) return;
+            // ==================== DOM ====================
+            const chatContainer = document.getElementById('chatContainer');
+            const userInput = document.getElementById('userInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const scrollBottomBtn = document.getElementById('scrollBottomBtn');
+            const placeholderMsg = document.getElementById('placeholderMsg');
 
-            const container = document.getElementById('chat-container');
-            if (container.querySelector('div[style*="text-align: center"]')) {
-                container.innerHTML = '';
+            let isProcessing = false;
+            let autoScrollActive = true;
+            const STORAGE_KEY = 'grokbot_chat_v3';
+
+            // ==================== LOCAL STORAGE ====================
+            function saveMessages() {
+                const messages = [];
+                chatContainer.querySelectorAll('.message-wrapper').forEach(w => {
+                    const bubble = w.querySelector('.message-bubble');
+                    if (!bubble) return;
+                    const type = w.classList.contains('sent') ? 'sent' : 'received';
+                    const msgData = { type, textContent: '' };
+                    if (type === 'sent') {
+                        msgData.textContent = bubble.textContent.replace(/📋/g, '').trim();
+                    } else {
+                        const aiContent = bubble.querySelector('.ai-content');
+                        if (aiContent) msgData.textContent = aiContent.innerHTML;
+                    }
+                    messages.push(msgData);
+                });
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch (e) {}
             }
 
-            appendMessage('user', userInput);
-            document.getElementById('user-input').value = '';
-            
-            // Yükleniyor göster
-            const loadingDiv = appendMessage('bot', '<em>Düşünüyor...</em>');
-            document.getElementById('send-btn').disabled = true;
+            function loadMessages() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (!raw) return;
+                    const messages = JSON.parse(raw);
+                    if (!Array.isArray(messages) || messages.length === 0) return;
+                    if (placeholderMsg) placeholderMsg.remove();
+                    messages.forEach(msg => {
+                        if (msg.type === 'sent') appendSentMessage(msg.textContent, false);
+                        else appendReceivedFromStorage(msg.textContent);
+                    });
+                    scrollToBottom(false);
+                } catch (e) {}
+            }
 
-            try {
-                // DuckDuckGo AI Chat'e istek
-                const chatResponse = await fetch(`${WORKER_URL}/chat`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: userInput,
-                        model: selectedModel
-                    })
+            function appendReceivedFromStorage(html) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper received';
+                const bubble = document.createElement('div');
+                bubble.className = 'message-bubble received';
+                const content = document.createElement('div');
+                content.className = 'ai-content';
+                content.innerHTML = html || '';
+                bubble.appendChild(content);
+                addCopyButton(wrapper, bubble, 'received');
+                wrapper.appendChild(bubble);
+                chatContainer.appendChild(wrapper);
+            }
+
+            // ==================== YARDIMCI ====================
+            function isNearBottom() {
+                return chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 60;
+            }
+            function scrollToBottom(smooth = true) {
+                requestAnimationFrame(() => {
+                    chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
+                });
+            }
+            function updateScrollBtn() {
+                if (isNearBottom()) {
+                    scrollBottomBtn.classList.remove('visible');
+                    autoScrollActive = true;
+                } else {
+                    scrollBottomBtn.classList.add('visible');
+                    autoScrollActive = false;
+                }
+                const rect = chatContainer.getBoundingClientRect();
+                scrollBottomBtn.style.right = '20px';
+                scrollBottomBtn.style.bottom = (window.innerHeight - rect.bottom + 20) + 'px';
+            }
+
+            // ==================== KOPYALA ====================
+            function addCopyButton(wrapper, bubble, type) {
+                const btn = document.createElement('button');
+                btn.className = 'copy-btn';
+                btn.textContent = '📋';
+                btn.title = 'Kopyala';
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    let text = '';
+                    if (type === 'sent') text = bubble.textContent.replace(/📋/g, '').trim();
+                    else {
+                        const c = bubble.querySelector('.ai-content');
+                        text = c ? (c.textContent || c.innerText).trim() : '';
+                    }
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        btn.textContent = '✓'; btn.classList.add('copied');
+                        setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('copied'); }, 1200);
+                    } catch {
+                        const ta = document.createElement('textarea');
+                        ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+                        document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                        document.body.removeChild(ta);
+                        btn.textContent = '✓'; btn.classList.add('copied');
+                        setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('copied'); }, 1200);
+                    }
+                });
+                wrapper.appendChild(btn);
+            }
+
+            // ==================== MESAJ ====================
+            function appendSentMessage(text, save = true) {
+                if (placeholderMsg) placeholderMsg.remove();
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper sent';
+                const bubble = document.createElement('div');
+                bubble.className = 'message-bubble sent';
+                bubble.textContent = text;
+                wrapper.appendChild(bubble);
+                addCopyButton(wrapper, bubble, 'sent');
+                chatContainer.appendChild(wrapper);
+                if (save) saveMessages();
+                scrollToBottom(true);
+                autoScrollActive = true;
+            }
+
+            function appendTypingIndicator() {
+                if (placeholderMsg) placeholderMsg.remove();
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper received';
+                wrapper.id = 'typingIndicator';
+                const bubble = document.createElement('div');
+                bubble.className = 'message-bubble received';
+                const ind = document.createElement('div');
+                ind.className = 'typing-indicator';
+                ind.innerHTML = '<span></span><span></span><span></span>';
+                bubble.appendChild(ind);
+                wrapper.appendChild(bubble);
+                chatContainer.appendChild(wrapper);
+                if (autoScrollActive) scrollToBottom(true);
+            }
+
+            function removeTypingIndicator() {
+                const el = document.getElementById('typingIndicator');
+                if (el) el.remove();
+            }
+
+            function appendReceivedMessage(textContent) {
+                if (placeholderMsg) placeholderMsg.remove();
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper received';
+                const bubble = document.createElement('div');
+                bubble.className = 'message-bubble received';
+                const content = document.createElement('div');
+                content.className = 'ai-content';
+                const cursor = document.createElement('span');
+                cursor.className = 'cursor-blink';
+                content.appendChild(cursor);
+                bubble.appendChild(content);
+                addCopyButton(wrapper, bubble, 'received');
+                wrapper.appendChild(bubble);
+                chatContainer.appendChild(wrapper);
+                typewriterEffect(content, textContent, () => saveMessages());
+                if (autoScrollActive) scrollToBottom(true);
+                return wrapper;
+            }
+
+            // ==================== DAKTİLO ====================
+            function typewriterEffect(container, rawText, onComplete) {
+                const html = markdownToHTML(rawText);
+                const cursor = container.querySelector('.cursor-blink');
+                const temp = document.createElement('div');
+                temp.innerHTML = html;
+                const plain = (temp.textContent || temp.innerText || '').trim();
+                container.innerHTML = '';
+                if (!plain) { container.innerHTML = html; if (onComplete) onComplete(); return; }
+                let i = 0;
+                const chars = [...plain];
+                const textNode = document.createTextNode('');
+                container.appendChild(textNode);
+                container.appendChild(cursor);
+                function type() {
+                    if (i < chars.length) {
+                        textNode.textContent += chars[i]; i++;
+                        if (autoScrollActive && isNearBottom()) scrollToBottom(true);
+                        updateScrollBtn();
+                        setTimeout(type, 3);
+                    } else {
+                        cursor.remove();
+                        container.innerHTML = html;
+                        if (onComplete) onComplete();
+                        updateScrollBtn();
+                    }
+                }
+                type();
+            }
+
+            // ==================== MARKDOWN ====================
+            function markdownToHTML(md) {
+                let h = md;
+                h = h.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+                h = h.replace(/https?:\/\/\S+/g, '');
+                h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                h = h.replace(/__(.+?)__/g, '<strong>$1</strong>');
+                h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
+                h = h.replace(/_(.+?)_/g, '<em>$1</em>');
+                h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
+                h = h.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+                h = h.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+                h = h.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+                h = h.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+                h = h.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+                h = h.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+                h = h.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+                h = h.replace(/\n\n/g, '<br><br>');
+                h = h.replace(/\n/g, '<br>');
+                return h;
+            }
+
+            // ==================== TINYFISH API (DÜZELTİLDİ) ====================
+            async function callTinyFishSearch(query) {
+                try {
+                    const targetUrl = `https://api.search.tinyfish.ai?query=${encodeURIComponent(query)}&language=tr&max_results=5`;
+                    const res = await fetch(`${PROXY_URL}?url=${encodeURIComponent(targetUrl)}`, {
+                        method: 'GET',
+                        headers: { 'X-API-Key': TINYFISH_API_KEY }
+                    });
+                    if (!res.ok) return { results: [] };
+                    const data = await res.json();
+                    console.log('🔍 TinyFish Search sonuç:', data);
+                    return data;
+                } catch (e) {
+                    console.warn('TinyFish Search hatası:', e);
+                    return { results: [] };
+                }
+            }
+
+            async function callTinyFishFetch(url) {
+                try {
+                    const targetUrl = `https://api.fetch.tinyfish.ai`;
+                    const res = await fetch(`${PROXY_URL}?url=${encodeURIComponent(targetUrl)}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-API-Key': TINYFISH_API_KEY,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ urls: [url], format: 'markdown' })
+                    });
+                    if (!res.ok) return '';
+                    const data = await res.json();
+                    console.log('📄 TinyFish Fetch sonuç:', data);
+                    return data.content || data.markdown || data.text || '';
+                } catch (e) {
+                    console.warn('TinyFish Fetch hatası:', e);
+                    return '';
+                }
+            }
+
+            async function getInternetContext(query) {
+                const searchResult = await callTinyFishSearch(query);
+                if (!searchResult.results || searchResult.results.length === 0) {
+                    console.log('⚠️ TinyFish arama sonucu boş');
+                    return '';
+                }
+
+                let context = 'GÜNCEL İNTERNET ARAMA SONUÇLARI:\n';
+                const firstResult = searchResult.results[0];
+                if (firstResult.url) {
+                    const fullContent = await callTinyFishFetch(firstResult.url);
+                    if (fullContent && fullContent.length > 100) {
+                        context += `\n📄 KAYNAK 1 (Tam İçerik):\n${fullContent.substring(0, 3000)}\n---\n`;
+                    }
+                }
+                searchResult.results.slice(1, 5).forEach((r, i) => {
+                    context += `📄 KAYNAK ${i + 2}: ${r.title || ''}\n${r.snippet || r.description || ''}\n---\n`;
                 });
 
-                const chatData = await chatResponse.json();
+                return context;
+            }
 
-                if (chatData.error) {
-                    throw new Error(chatData.error);
+            // ==================== GROK API ====================
+            async function callGrok(userQuery, context) {
+                const tarih = new Date().toLocaleString('tr-TR', {
+                    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', weekday: 'long'
+                });
+                let prompt = userQuery;
+                if (context) prompt = `SORU: ${userQuery}\n\n${context}\n\nYukarıdaki internet sonuçlarına dayanarak bu soruyu yanıtla.`;
+                const history = JSON.parse(localStorage.getItem('grokbot_hist') || '[]');
+                const recent = history.slice(-4);
+
+                const res = await fetch(`${PROXY_URL}?url=https://api.groq.com/openai/v1/chat/completions`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${GROK_API_KEY}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [
+                            { role: "system", content: `Sen bir arkadaşsın. Bugün: ${tarih}. Sadece TÜRKÇE konuş. Her cevaba ABİ diyerek başla. Emojiler kullan.` },
+                            ...recent.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text })),
+                            { role: "user", content: prompt }
+                        ],
+                        temperature: 0.3, max_tokens: 1024
+                    })
+                });
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(`Grok API (${res.status}): ${errText}`);
                 }
-
-                // Yükleniyor mesajını güncelle
-                updateMessageWithResponse(loadingDiv, chatData.response, userInput);
-                
-                // Görselleri çek
-                fetchImages(userInput, loadingDiv);
-
-            } catch (error) {
-                updateMessage(loadingDiv, '❌ Hata: ' + error.message);
-            } finally {
-                document.getElementById('send-btn').disabled = false;
-            }
-        }
-
-        async function fetchImages(query, messageDiv) {
-            const imagesContainer = messageDiv.querySelector('.images-container');
-            if (!imagesContainer) return;
-
-            try {
-                const response = await fetch(`${WORKER_URL}/images?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-
-                if (data.images && data.images.length > 0) {
-                    let imagesHTML = '<div class="images-grid">';
-                    data.images.forEach(img => {
-                        imagesHTML += `
-                            <img src="${img.thumbnail}" 
-                                 alt="${img.title}" 
-                                 onclick="window.open('${img.image}', '_blank')"
-                                 onerror="this.style.display='none'"
-                                 title="${img.title}">
-                        `;
-                    });
-                    imagesHTML += '</div>';
-                    imagesContainer.innerHTML = imagesHTML;
-                } else {
-                    imagesContainer.innerHTML = '';
+                const data = await res.json();
+                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+                    throw new Error('Grok beklenmeyen yanıt: ' + JSON.stringify(data));
                 }
-            } catch (error) {
-                imagesContainer.innerHTML = '';
+                return data.choices[0].message.content;
             }
-        }
 
-        function updateMessageWithResponse(messageDiv, response, query) {
-            messageDiv.innerHTML = `
-                <div class="bot-response">
-                    <div class="ai-text">${response.replace(/\n/g, '<br>')}</div>
-                    <div class="images-container">
-                        <div class="loading-text">🖼️ Görseller yükleniyor...</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function updateMessage(messageDiv, content) {
-            messageDiv.innerHTML = `<div class="bot-response">${content}</div>`;
-        }
-
-        function appendMessage(role, content) {
-            const container = document.getElementById('chat-container');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
-            
-            if (role === 'user') {
-                messageDiv.innerHTML = `<div class="user-message">${content}</div>`;
-            } else {
-                messageDiv.innerHTML = `<div class="bot-response">${content}</div>`;
+            function cleanText(t) {
+                let c = t.replace(/␃🔚␗/g, '').replace(/\{[\s\S]*?\}/g, '');
+                const idx = c.search(/[A-ZİĞÜŞÖÇ]/);
+                if (idx !== -1) c = c.substring(idx);
+                c = c.replace(/[\s\}\]奉",:]{2,}$/g, '');
+                return c.replace(/\[\d+\]\(.*?\)/g, '').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/^\s*[\-\*]\s+/gm, '🔹 ').replace(/\n/g, '<br>');
             }
-            
-            container.appendChild(messageDiv);
-            container.scrollTop = container.scrollHeight;
-            
-            return messageDiv;
-        }
+
+            // ==================== ANA İŞLEM ====================
+            async function handleSend() {
+                if (isProcessing) return;
+                const query = userInput.value.trim();
+                if (!query) return;
+                if (query.toUpperCase() === 'CLS') {
+                    showXPClearConfirm();
+                    userInput.value = '';
+                    resizeTextarea();
+                    return;
+                }
+                isProcessing = true;
+                sendBtn.disabled = true;
+                userInput.disabled = true;
+                userInput.value = '';
+                resizeTextarea();
+                appendSentMessage(query);
+                appendTypingIndicator();
+
+                try {
+                    const ctx = await getInternetContext(query);
+                    const reply = await callGrok(query, ctx);
+                    removeTypingIndicator();
+                    const clean = cleanText(reply);
+                    const final = clean.toUpperCase().startsWith('ABİ') ? clean : 'ABİ ' + clean;
+                    appendReceivedMessage(final);
+
+                    const hist = JSON.parse(localStorage.getItem('grokbot_hist') || '[]');
+                    hist.push({ role: 'user', text: query });
+                    hist.push({ role: 'ai', text: final });
+                    if (hist.length > 40) hist.splice(0, hist.length - 40);
+                    localStorage.setItem('grokbot_hist', JSON.stringify(hist));
+                } catch (err) {
+                    console.error('Hata:', err);
+                    removeTypingIndicator();
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'message-wrapper received';
+                    const bubble = document.createElement('div');
+                    bubble.className = 'message-bubble received';
+                    const ec = document.createElement('div');
+                    ec.className = 'ai-content';
+                    ec.textContent = '⚠️ Üzgünüm abi, hata: ' + (err.message || 'Bilinmeyen');
+                    bubble.appendChild(ec);
+                    addCopyButton(wrapper, bubble, 'received');
+                    wrapper.appendChild(bubble);
+                    chatContainer.appendChild(wrapper);
+                    saveMessages();
+                }
+                isProcessing = false;
+                sendBtn.disabled = false;
+                userInput.disabled = false;
+                userInput.blur();
+                resizeTextarea();
+                updateScrollBtn();
+            }
+
+            function resizeTextarea() {
+                userInput.style.height = 'auto';
+                userInput.style.height = Math.min(userInput.scrollHeight, 130) + 'px';
+            }
+
+            // ==================== XP MODAL ====================
+            function showXPClearConfirm() {
+                const exist = document.querySelector('.xp-overlay');
+                if (exist) exist.remove();
+                const overlay = document.createElement('div');
+                overlay.className = 'xp-overlay';
+                const dialog = document.createElement('div');
+                dialog.className = 'xp-dialog';
+                dialog.innerHTML = `
+                    <div class="xp-titlebar"><span>⚠️</span> Sohbeti Temizle</div>
+                    <div class="xp-body"><span class="xp-warn-icon">⚠️</span><span>Tüm sohbet geçmişini silmek istediğine emin misin?<br>Bu işlem geri alınamaz.</span></div>
+                    <div class="xp-buttons">
+                        <button class="xp-btn ok" id="xpOkBtn">Tamam</button>
+                        <button class="xp-btn cancel" id="xpCancelBtn">İptal</button>
+                    </div>`;
+                overlay.appendChild(dialog);
+                document.body.appendChild(overlay);
+                const ok = dialog.querySelector('#xpOkBtn');
+                const cancel = dialog.querySelector('#xpCancelBtn');
+                const close = () => overlay.remove();
+                cancel.addEventListener('click', close);
+                overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+                ok.addEventListener('click', () => {
+                    chatContainer.querySelectorAll('.message-wrapper').forEach(w => w.remove());
+                    localStorage.removeItem(STORAGE_KEY);
+                    localStorage.removeItem('grokbot_hist');
+                    if (!chatContainer.querySelector('#placeholderMsg')) {
+                        const ph = document.createElement('div');
+                        ph.id = 'placeholderMsg';
+                        ph.style.cssText = 'text-align:center;color:#bbb;padding:40px 20px;font-size:13px;line-height:1.5;';
+                        ph.textContent = '👋 Selam abi!\nSorunu yaz, Grok cevaplasın.';
+                        chatContainer.appendChild(ph);
+                    }
+                    scrollBottomBtn.classList.remove('visible');
+                    close();
+                });
+                dialog.addEventListener('keydown', e => {
+                    if (e.key === 'Escape') close();
+                    if (e.key === 'Enter') ok.click();
+                });
+                setTimeout(() => ok.focus(), 100);
+            }
+
+            // ==================== EVENTLER ====================
+            sendBtn.addEventListener('click', handleSend);
+            userInput.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault();
+                    handleSend(); }
+            });
+            userInput.addEventListener('input', resizeTextarea);
+            clearBtn.addEventListener('click', showXPClearConfirm);
+            chatContainer.addEventListener('scroll', updateScrollBtn);
+            scrollBottomBtn.addEventListener('click', () => {
+                scrollToBottom(true);
+                autoScrollActive = true;
+                scrollBottomBtn.classList.remove('visible');
+            });
+            window.addEventListener('resize', updateScrollBtn);
+
+            function init() {
+                loadMessages();
+                scrollToBottom(false);
+                resizeTextarea();
+                updateScrollBtn();
+            }
+            window.addEventListener('beforeunload', () => saveMessages());
+            setInterval(() => saveMessages(), 30000);
+            init();
+            console.log('🤖 GrokBot + TinyFish v2 hazır abi!');
+        })();
     </script>
 </body>
 </html>
