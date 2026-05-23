@@ -323,10 +323,11 @@
 
             let isProcessing = false;
             let autoScrollActive = true;
-            const STORAGE_KEY = 'groqbot_chat_v4';
+            const STORAGE_KEY = 'groqbot_chat_v5';
+            const HISTORY_KEY = 'groqbot_hist_v2';
             let cooldownTimer = null;
             let cooldownSeconds = 0;
-            const COOLDOWN_DURATION = 12; // 12 saniye
+            const COOLDOWN_DURATION = 12;
 
             // ==================== COOLDOWN ====================
             function startCooldown() {
@@ -334,7 +335,6 @@
                 disableInput();
                 updateTimerDisplay();
                 timerBar.style.opacity = '1';
-
                 cooldownTimer = setInterval(() => {
                     cooldownSeconds--;
                     updateTimerDisplay();
@@ -347,20 +347,17 @@
                     }
                 }, 1000);
             }
-
             function disableInput() {
                 userInput.disabled = true;
                 sendBtn.disabled = true;
                 userInput.placeholder = '⏳ Lütfen bekleyin...';
             }
-
             function enableInput() {
                 userInput.disabled = false;
                 sendBtn.disabled = false;
                 userInput.placeholder = 'Bir şey sor abi...';
                 userInput.blur();
             }
-
             function updateTimerDisplay() {
                 timerBar.textContent = `⏳ ${cooldownSeconds} saniye sonra tekrar sorabilirsin`;
             }
@@ -383,7 +380,6 @@
                 });
                 try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch (e) {}
             }
-
             function loadMessages() {
                 try {
                     const raw = localStorage.getItem(STORAGE_KEY);
@@ -398,7 +394,6 @@
                     scrollToBottom(false);
                 } catch (e) {}
             }
-
             function appendReceivedFromStorage(html) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'message-wrapper received';
@@ -480,7 +475,6 @@
                 scrollToBottom(true);
                 autoScrollActive = true;
             }
-
             function appendTypingIndicator() {
                 if (placeholderMsg) placeholderMsg.remove();
                 const wrapper = document.createElement('div');
@@ -496,12 +490,10 @@
                 chatContainer.appendChild(wrapper);
                 if (autoScrollActive) scrollToBottom(true);
             }
-
             function removeTypingIndicator() {
                 const el = document.getElementById('typingIndicator');
                 if (el) el.remove();
             }
-
             function appendReceivedMessage(textContent) {
                 if (placeholderMsg) placeholderMsg.remove();
                 const wrapper = document.createElement('div');
@@ -555,20 +547,29 @@
             // ==================== MARKDOWN ====================
             function markdownToHTML(md) {
                 let h = md;
+                // Linkleri temizle (sadece metin kalsın, tıklanamasın)
                 h = h.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
                 h = h.replace(/https?:\/\/\S+/g, '');
+                // Kalın: ** metin ** veya __ metin __
                 h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
                 h = h.replace(/__(.+?)__/g, '<strong>$1</strong>');
+                // İtalik: * metin * veya _ metin _
                 h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
                 h = h.replace(/_(.+?)_/g, '<em>$1</em>');
+                // Kod: `metin`
                 h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
+                // Başlıklar
                 h = h.replace(/^### (.+)$/gm, '<h3>$1</h3>');
                 h = h.replace(/^## (.+)$/gm, '<h2>$1</h2>');
                 h = h.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+                // Madde işaretleri: - veya *
                 h = h.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
                 h = h.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+                // Numaralı liste
                 h = h.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+                // Alıntı: > metin
                 h = h.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+                // Satır atlamaları
                 h = h.replace(/\n\n/g, '<br><br>');
                 h = h.replace(/\n/g, '<br>');
                 return h;
@@ -584,14 +585,13 @@
                     });
                     if (!res.ok) return { results: [] };
                     const data = await res.json();
-                    console.log('🔍 TinyFish Search sonuç:', data);
+                    console.log('🔍 TinyFish Search:', data);
                     return data;
                 } catch (e) {
                     console.warn('TinyFish Search hatası:', e);
                     return { results: [] };
                 }
             }
-
             async function callTinyFishFetch(url) {
                 try {
                     const targetUrl = `https://api.fetch.tinyfish.ai`;
@@ -605,14 +605,13 @@
                     });
                     if (!res.ok) return '';
                     const data = await res.json();
-                    console.log('📄 TinyFish Fetch sonuç:', data);
+                    console.log('📄 TinyFish Fetch:', data);
                     return data.content || data.markdown || data.text || '';
                 } catch (e) {
                     console.warn('TinyFish Fetch hatası:', e);
                     return '';
                 }
             }
-
             async function getInternetContext(query) {
                 const searchResult = await callTinyFishSearch(query);
                 if (!searchResult.results || searchResult.results.length === 0) {
@@ -639,12 +638,11 @@
                     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', weekday: 'long'
                 });
                 let prompt = userQuery;
-if (context) {
-    prompt = `SORU: ${userQuery}\n\n${context}\n\nEğer yukarıdaki internet sonuçları soruyla alakalı güncel bilgiler içeriyorsa onları kullan. Eğer internet sonuçları soruyla alakasızsa veya soru günlük sohbet (selamlaşma, hal hatır sorma, kişisel sohbet) içeriyorsa, internet sonuçlarından hiç bahsetme, direkt soruyu yanıtla.`;
-} else {
-    prompt = userQuery;
-}                const history = JSON.parse(localStorage.getItem('groqbot_hist') || '[]');
-                const recent = history.slice(-4);
+                if (context) {
+                    prompt = `SORU: ${userQuery}\n\n${context}\n\nEğer yukarıdaki internet sonuçları soruyla alakalı güncel bilgiler içeriyorsa onları kullan. Eğer internet sonuçları soruyla alakasızsa veya soru günlük sohbet (selamlaşma, hal hatır sorma, kişisel sohbet) içeriyorsa, internet sonuçlarından hiç bahsetme, direkt soruyu yanıtla.`;
+                }
+                const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+                const recent = history.slice(-5);
 
                 const res = await fetch(`${PROXY_URL}?url=https://api.groq.com/openai/v1/chat/completions`, {
                     method: 'POST',
@@ -652,7 +650,7 @@ if (context) {
                     body: JSON.stringify({
                         model: "llama-3.3-70b-versatile",
                         messages: [
-                            { role: "system", content: `Sen bir arkadaşsın. Bugün: ${tarih}. Sadece TÜRKÇE konuş. Her cevaba ABİ diyerek başla. Emojiler kullan.` },
+                            { role: "system", content: `Sen bir arkadaşsın. Bugün: ${tarih}. Sadece TÜRKÇE konuş. Her cevaba ABİ diyerek başla. Emojiler kullan. Cevaplarını düzenli ver: önce kısa başlık, sonra maddeler. Önemli yerleri **kalın** yap. Sayısal verileri ve isimleri **kalın** yaz.` },
                             ...recent.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text })),
                             { role: "user", content: prompt }
                         ],
@@ -669,20 +667,18 @@ if (context) {
                 }
                 return data.choices[0].message.content;
             }
-
             function cleanText(t) {
                 let c = t.replace(/␃🔚␗/g, '').replace(/\{[\s\S]*?\}/g, '');
                 const idx = c.search(/[A-ZİĞÜŞÖÇ]/);
                 if (idx !== -1) c = c.substring(idx);
                 c = c.replace(/[\s\}\]奉",:]{2,}$/g, '');
-                return c.replace(/\[\d+\]\(.*?\)/g, '').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/^\s*[\-\*]\s+/gm, '🔹 ').replace(/\n/g, '<br>');
+                return c;
             }
 
             // ==================== ANA İŞLEM ====================
             async function handleSend() {
                 if (isProcessing) return;
-                if (cooldownTimer) return; // Bekleme süresindeyse engelle
-
+                if (cooldownTimer) return;
                 const query = userInput.value.trim();
                 if (!query) return;
                 if (query.toUpperCase() === 'CLS') {
@@ -707,11 +703,11 @@ if (context) {
                     const final = clean.toUpperCase().startsWith('ABİ') ? clean : 'ABİ ' + clean;
                     appendReceivedMessage(final);
 
-                    const hist = JSON.parse(localStorage.getItem('groqbot_hist') || '[]');
+                    const hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
                     hist.push({ role: 'user', text: query });
                     hist.push({ role: 'ai', text: final });
                     if (hist.length > 40) hist.splice(0, hist.length - 40);
-                    localStorage.setItem('groqbot_hist', JSON.stringify(hist));
+                    localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
                 } catch (err) {
                     console.error('Hata:', err);
                     removeTypingIndicator();
@@ -732,11 +728,8 @@ if (context) {
                 userInput.blur();
                 resizeTextarea();
                 updateScrollBtn();
-
-                // 12 saniye bekleme başlat
                 startCooldown();
             }
-
             function resizeTextarea() {
                 userInput.style.height = 'auto';
                 userInput.style.height = Math.min(userInput.scrollHeight, 130) + 'px';
@@ -767,7 +760,7 @@ if (context) {
                 ok.addEventListener('click', () => {
                     chatContainer.querySelectorAll('.message-wrapper').forEach(w => w.remove());
                     localStorage.removeItem(STORAGE_KEY);
-                    localStorage.removeItem('groqbot_hist');
+                    localStorage.removeItem(HISTORY_KEY);
                     if (!chatContainer.querySelector('#placeholderMsg')) {
                         const ph = document.createElement('div');
                         ph.id = 'placeholderMsg';
@@ -810,8 +803,9 @@ if (context) {
             window.addEventListener('beforeunload', () => saveMessages());
             setInterval(() => saveMessages(), 30000);
             init();
-            console.log('🤖 GroqBot + TinyFish v3 hazır abi!');
+            console.log('🤖 GroqBot v5 hazır abi!');
             console.log('⏳ Cooldown:', COOLDOWN_DURATION, 'saniye');
+            console.log('🧠 Hafıza:', 'Son 5 mesaj');
         })();
     </script>
 </body>
