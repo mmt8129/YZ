@@ -1257,27 +1257,20 @@
             }
 
             // ==================== MESAJ ====================
-            function appendSentMessage(text, save = true) {
-                if (placeholderMsg) placeholderMsg.remove();
-                const wrapper = document.createElement('div');
-                wrapper.className = 'message-wrapper sent';
-                const bubble = document.createElement('div');
-                bubble.className = 'message-bubble sent';
-                const titlebar = document.createElement('div');
-                titlebar.className = 'xp-sent-titlebar';
-                titlebar.textContent = '📝 Sen';
-                const body = document.createElement('div');
-                body.className = 'xp-sent-body';
-                body.textContent = text;
-                bubble.appendChild(titlebar);
-                bubble.appendChild(body);
-                wrapper.appendChild(bubble);
-                addCopyButton(wrapper, bubble, 'sent');
-                chatContainer.appendChild(wrapper);
-                if (save) saveMessages();
-                scrollToBottom(true);
-                autoScrollActive = true;
-            }
+function appendSentMessage(text, save = true) {
+    if (placeholderMsg) placeholderMsg.remove();
+    const wrapper = document.createElement('div');
+    wrapper.className = 'message-wrapper sent';
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble sent';
+    bubble.textContent = text;
+    wrapper.appendChild(bubble);
+    addCopyButton(wrapper, bubble, 'sent');
+    chatContainer.appendChild(wrapper);
+    if (save) saveMessages();
+    scrollToBottom(true);
+    autoScrollActive = true;
+}
 
             function appendTypingIndicator() {
                 if (placeholderMsg) placeholderMsg.remove();
