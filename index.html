@@ -1452,8 +1452,9 @@
                             // Resim anahtarlarını temizle
                             let clean = lastUserMsg;
                             IMAGE_KEYWORDS.forEach(kw => {
-                                clean = clean.replace(new RegExp(kw, 'gi'), '').trim();
-                            });
+    const escapedKw = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    clean = clean.replace(new RegExp(escapedKw, 'gi'), '').trim();
+});
                             return clean || lastUserMsg;
                         }
                     }
