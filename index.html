@@ -2,8 +2,8 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GroqBot - Sohbet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GroqBot - Görselli Sohbet</title>
     <style>
         :root {
             --bg: #ffffff;
@@ -16,7 +16,11 @@
             --border: #e8e8e8;
             --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: var(--font);
             background: #e8e8e8;
@@ -26,6 +30,7 @@
             height: 100vh;
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
         .app-container {
             width: 100%;
@@ -35,12 +40,16 @@
             background: var(--bg);
             display: flex;
             flex-direction: column;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
             overflow: hidden;
             position: relative;
         }
         @media (min-width: 551px) {
-            .app-container { height: 92vh; border-radius: 10px; margin: 2vh 0; }
+            .app-container {
+                height: 92vh;
+                border-radius: 10px;
+                margin: 2vh 0;
+            }
         }
         .header {
             background: var(--header-bg);
@@ -65,116 +74,354 @@
             color: white;
             flex-shrink: 0;
         }
-        .header-info { flex: 1; min-width: 0; }
-        .header-name { font-weight: 600; font-size: 14px; color: #111b21; line-height: 1.2; }
-        .header-status { font-size: 11px; color: #667781; display: flex; align-items: center; gap: 3px; }
-        .header-status .dot { width: 6px; height: 6px; border-radius: 50%; background: #31a24c; flex-shrink: 0; }
-        .header-actions { display: flex; gap: 4px; align-items: center; }
+        .header-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .header-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #111b21;
+            line-height: 1.2;
+        }
+        .header-status {
+            font-size: 11px;
+            color: #667781;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .header-status .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #31a24c;
+            flex-shrink: 0;
+        }
+        .header-actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
         .btn-icon {
-            width: 30px; height: 30px; border-radius: 50%; border: none;
-            background: transparent; cursor: pointer; font-size: 15px;
-            display: flex; align-items: center; justify-content: center;
-            transition: 0.15s ease; color: #777;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.15s ease;
+            color: #777;
         }
-        .btn-icon:hover { background: rgba(0,0,0,0.05); color: #333; }
-
+        .btn-icon:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: #333;
+        }
         .chat-container {
-            flex: 1; overflow-y: auto; overflow-x: hidden;
-            padding: 8px 14px; display: flex; flex-direction: column; gap: 4px;
-            background: var(--chat-bg); -webkit-overflow-scrolling: touch; position: relative;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 8px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: var(--chat-bg);
+            -webkit-overflow-scrolling: touch;
+            position: relative;
         }
-        .chat-container::-webkit-scrollbar { width: 4px; }
-        .chat-container::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 10px; }
-        .chat-container::-webkit-scrollbar-track { background: transparent; }
-
+        .chat-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #d0d0d0;
+            border-radius: 10px;
+        }
+        .chat-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
         .scroll-bottom-btn {
-            position: fixed; bottom: 90px; right: 20px;
-            width: 38px; height: 38px; border-radius: 50%;
-            background: #fff; border: 1px solid #ddd;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; z-index: 999;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px; color: #555; transition: all 0.2s ease;
-            opacity: 0; transform: translateY(8px) scale(0.9); pointer-events: none;
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #555;
+            transition: all 0.2s ease;
+            opacity: 0;
+            transform: translateY(8px) scale(0.9);
+            pointer-events: none;
         }
         .scroll-bottom-btn.visible {
-            opacity: 1; transform: translateY(0) scale(1); pointer-events: auto;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
         }
-        .scroll-bottom-btn:active { transform: scale(0.92); background: #f0f0f0; }
+        .scroll-bottom-btn:active {
+            transform: scale(0.92);
+            background: #f0f0f0;
+        }
 
         .message-wrapper {
-            display: flex; width: 100%; animation: messageSlideIn 0.25s ease;
-            position: relative; flex-shrink: 0;
+            display: flex;
+            width: 100%;
+            animation: messageSlideIn 0.25s ease;
+            position: relative;
+            flex-shrink: 0;
         }
-        .message-wrapper.sent { justify-content: flex-end; }
-        .message-wrapper.received { justify-content: flex-start; }
+        .message-wrapper.sent {
+            justify-content: flex-end;
+        }
+        .message-wrapper.received {
+            justify-content: flex-start;
+        }
         @keyframes messageSlideIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         .message-bubble.sent {
-            background: var(--sent-bg); color: var(--sent-text);
-            max-width: 78%; padding: 8px 13px; border-radius: 14px 4px 14px 14px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word;
-            line-height: 1.4; font-size: 14px; position: relative;
+            background: var(--sent-bg);
+            color: var(--sent-text);
+            max-width: 78%;
+            padding: 8px 13px;
+            border-radius: 14px 4px 14px 14px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
+            line-height: 1.4;
+            font-size: 14px;
+            position: relative;
         }
         .message-bubble.received {
-            background: transparent; color: var(--received-text);
-            width: 100%; word-wrap: break-word; line-height: 1.5;
-            font-size: 14px; padding: 6px 0;
+            background: transparent;
+            color: var(--received-text);
+            width: 100%;
+            word-wrap: break-word;
+            line-height: 1.5;
+            font-size: 14px;
+            padding: 6px 0;
         }
         .message-bubble.received .ai-content {
-            padding: 0; min-height: 20px; line-height: 1.5; color: #111b21;
+            padding: 0;
+            min-height: 20px;
+            line-height: 1.5;
+            color: #111b21;
         }
-        .message-bubble.received .ai-content p { margin: 4px 0; }
-        .message-bubble.received .ai-content strong { font-weight: 600; }
-        .message-bubble.received .ai-content em { font-style: italic; }
-        .message-bubble.received .ai-content ul, .message-bubble.received .ai-content ol { margin: 4px 0; padding-left: 18px; }
-        .message-bubble.received .ai-content li { margin: 1px 0; }
+        .message-bubble.received .ai-content p {
+            margin: 4px 0;
+        }
+        .message-bubble.received .ai-content strong {
+            font-weight: 600;
+        }
+        .message-bubble.received .ai-content em {
+            font-style: italic;
+        }
+        .message-bubble.received .ai-content ul,
+        .message-bubble.received .ai-content ol {
+            margin: 4px 0;
+            padding-left: 18px;
+        }
+        .message-bubble.received .ai-content li {
+            margin: 1px 0;
+        }
         .message-bubble.received .ai-content code {
-            background: #f1f3f4; padding: 2px 5px; border-radius: 3px;
-            font-size: 13px; font-family: 'SF Mono', 'Consolas', monospace;
+            background: #f1f3f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 13px;
+            font-family: 'SF Mono', 'Consolas', monospace;
         }
         .message-bubble.received .ai-content pre {
-            background: #1e1e1e; color: #d4d4d4; padding: 10px;
-            border-radius: 5px; overflow-x: auto; margin: 6px 0; font-size: 12px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 6px 0;
+            font-size: 12px;
         }
-        .message-bubble.received .ai-content pre code { background: transparent; color: inherit; padding: 0; }
-        .message-bubble.received .ai-content a { color: #1a73e8; text-decoration: none; pointer-events: none; cursor: default; }
-        .message-bubble.received .ai-content h1, .message-bubble.received .ai-content h2, .message-bubble.received .ai-content h3 {
-            margin: 6px 0 3px; font-weight: 600; font-size: 15px;
+        .message-bubble.received .ai-content pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        .message-bubble.received .ai-content a {
+            color: #1a73e8;
+            text-decoration: none;
+            pointer-events: none;
+            cursor: default;
+        }
+        .message-bubble.received .ai-content h1,
+        .message-bubble.received .ai-content h2,
+        .message-bubble.received .ai-content h3 {
+            margin: 6px 0 3px;
+            font-weight: 600;
+            font-size: 15px;
         }
         .message-bubble.received .ai-content blockquote {
-            border-left: 2px solid #4285f4; padding-left: 8px; color: #666; margin: 4px 0;
+            border-left: 2px solid #4285f4;
+            padding-left: 8px;
+            color: #666;
+            margin: 4px 0;
         }
         .cursor-blink {
-            display: inline-block; width: 2px; height: 15px; background: #111b21;
-            margin-left: 1px; animation: blink 0.7s infinite; vertical-align: text-bottom;
+            display: inline-block;
+            width: 2px;
+            height: 15px;
+            background: #111b21;
+            margin-left: 1px;
+            animation: blink 0.7s infinite;
+            vertical-align: text-bottom;
         }
-        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* Sohbet içi resim galerisi */
+        .images-gallery {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            padding: 2px 0 6px 0;
+            margin-bottom: 4px;
+            scrollbar-width: thin;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 8px;
+        }
+        .images-gallery::-webkit-scrollbar {
+            height: 3px;
+        }
+        .images-gallery::-webkit-scrollbar-thumb {
+            background: #d0d0d0;
+            border-radius: 10px;
+        }
+        .images-gallery .gallery-item {
+            flex: 0 0 auto;
+            width: 120px;
+            height: 120px;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .images-gallery .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .images-gallery .gallery-item .img-placeholder {
+            width: 100%;
+            height: 100%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #bbb;
+            font-size: 24px;
+        }
 
         .copy-btn {
-            position: absolute; bottom: -2px; right: 2px; width: 24px; height: 24px;
-            border-radius: 10px; border: none; background: transparent; cursor: pointer;
-            font-size: 12px; display: flex; align-items: center; justify-content: center;
-            color: #aaa; transition: all 0.15s ease; opacity: 0; z-index: 2;
+            position: absolute;
+            bottom: -2px;
+            right: 2px;
+            width: 24px;
+            height: 24px;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+            transition: all 0.15s ease;
+            opacity: 0;
+            z-index: 2;
         }
-        .message-wrapper:hover .copy-btn, .message-wrapper:active .copy-btn { opacity: 1; }
-        .copy-btn:hover { background: rgba(0,0,0,0.06); color: #555; }
-        .copy-btn.copied { color: #34a853; font-weight: bold; }
-        .message-wrapper.sent .copy-btn { color: rgba(255,255,255,0.7); right: 4px; bottom: 0px; }
-        .message-wrapper.sent .copy-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
-        .message-wrapper.received .copy-btn { right: -2px; bottom: -2px; }
+        .message-wrapper:hover .copy-btn,
+        .message-wrapper:active .copy-btn {
+            opacity: 1;
+        }
+        .copy-btn:hover {
+            background: rgba(0, 0, 0, 0.06);
+            color: #555;
+        }
+        .copy-btn.copied {
+            color: #34a853;
+            font-weight: bold;
+        }
+        .message-wrapper.sent .copy-btn {
+            color: rgba(255, 255, 255, 0.7);
+            right: 4px;
+            bottom: 0px;
+        }
+        .message-wrapper.sent .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+        .message-wrapper.received .copy-btn {
+            right: -2px;
+            bottom: -2px;
+        }
 
-        .typing-indicator { display: flex; align-items: center; gap: 3px; padding: 8px 0; }
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            padding: 8px 0;
+        }
         .typing-indicator span {
-            width: 7px; height: 7px; border-radius: 50%; background: #bbb;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #bbb;
             animation: typingBounce 1.2s infinite;
         }
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
         @keyframes typingBounce {
-            0%,60%,100% { transform: translateY(0); opacity: 0.3; }
-            30% { transform: translateY(-6px); opacity: 1; }
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.3;
+            }
+            30% {
+                transform: translateY(-6px);
+                opacity: 1;
+            }
         }
 
         .input-area {
@@ -192,28 +439,67 @@
             align-items: flex-end;
             gap: 6px;
         }
-        .input-wrapper { flex: 1; position: relative; }
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
         .input-wrapper textarea {
-            width: 100%; padding: 9px 12px; border-radius: 18px;
-            border: 1px solid #ddd; font-size: 14px; outline: none;
-            background: #fff; font-family: var(--font); transition: 0.15s ease;
-            color: #111b21; resize: none; overflow-y: auto;
-            min-height: 36px; max-height: 130px; line-height: 1.35;
+            width: 100%;
+            padding: 9px 12px;
+            border-radius: 18px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            outline: none;
+            background: #fff;
+            font-family: var(--font);
+            transition: 0.15s ease;
+            color: #111b21;
+            resize: none;
+            overflow-y: auto;
+            min-height: 36px;
+            max-height: 130px;
+            line-height: 1.35;
             -webkit-overflow-scrolling: touch;
         }
-        .input-wrapper textarea:focus { border-color: #4285f4; box-shadow: 0 0 0 2px rgba(66,133,244,0.1); }
-        .input-wrapper textarea::placeholder { color: #999; }
-        .input-wrapper textarea:disabled { background: #f0f0f0; cursor: not-allowed; }
-        .send-btn {
-            width: 38px; height: 38px; border-radius: 50%; border: none;
-            background: #4285f4; color: #fff; cursor: pointer; font-size: 16px;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0; transition: all 0.15s ease; margin-bottom: 1px;
+        .input-wrapper textarea:focus {
+            border-color: #4285f4;
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.1);
         }
-        .send-btn:hover { background: #3367d6; }
-        .send-btn:active { transform: scale(0.93); background: #2a56c6; }
-        .send-btn:disabled { background: #b0c4de; cursor: not-allowed; transform: none; }
-
+        .input-wrapper textarea::placeholder {
+            color: #999;
+        }
+        .input-wrapper textarea:disabled {
+            background: #f0f0f0;
+            cursor: not-allowed;
+        }
+        .send-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: none;
+            background: #4285f4;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+            margin-bottom: 1px;
+        }
+        .send-btn:hover {
+            background: #3367d6;
+        }
+        .send-btn:active {
+            transform: scale(0.93);
+            background: #2a56c6;
+        }
+        .send-btn:disabled {
+            background: #b0c4de;
+            cursor: not-allowed;
+            transform: none;
+        }
         .timer-bar {
             text-align: center;
             font-size: 11px;
@@ -223,53 +509,264 @@
             transition: opacity 0.3s ease;
         }
 
+        /* XP Modal */
         .xp-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-            z-index: 10000; display: flex; align-items: center; justify-content: center;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             animation: fadeIn 0.12s ease;
         }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
         .xp-dialog {
-            background: #fff; border: 2px solid #0055e5; border-radius: 8px 8px 0 0;
-            box-shadow: 0 4px 25px rgba(0,0,0,0.4); width: 300px; max-width: 90vw;
-            overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 12px;
+            background: #fff;
+            border: 2px solid #0055e5;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
+            width: 300px;
+            max-width: 90vw;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 12px;
         }
         .xp-titlebar {
             background: linear-gradient(180deg, #0058ee 0%, #3a8cf5 8%, #0055e5 40%, #0044cc 100%);
-            color: #fff; padding: 5px 7px; font-weight: 700; font-size: 12px;
-            display: flex; align-items: center; gap: 5px;
+            color: #fff;
+            padding: 5px 7px;
+            font-weight: 700;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         .xp-body {
-            padding: 16px 14px; display: flex; align-items: flex-start; gap: 10px;
-            font-size: 12px; color: #000; line-height: 1.4;
+            padding: 16px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 12px;
+            color: #000;
+            line-height: 1.4;
         }
-        .xp-body .xp-warn-icon { font-size: 24px; flex-shrink: 0; }
+        .xp-body .xp-warn-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
         .xp-buttons {
-            display: flex; justify-content: flex-end; gap: 6px;
-            padding: 8px 12px; background: #ece9d8; border-top: 1px solid #d4d0c8;
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+            padding: 8px 12px;
+            background: #ece9d8;
+            border-top: 1px solid #d4d0c8;
         }
         .xp-btn {
-            padding: 4px 16px; border: 1px solid #003c74; border-radius: 3px;
-            font-size: 11px; cursor: pointer; font-family: 'Segoe UI', Tahoma, sans-serif;
-            font-weight: 500; min-width: 60px; transition: all 0.08s ease; outline: none;
+            padding: 4px 16px;
+            border: 1px solid #003c74;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-weight: 500;
+            min-width: 60px;
+            transition: all 0.08s ease;
+            outline: none;
         }
-        .xp-btn:active { transform: translateY(1px); }
+        .xp-btn:active {
+            transform: translateY(1px);
+        }
         .xp-btn.ok {
             background: linear-gradient(180deg, #fff 0%, #ece9d8 100%);
-            color: #000; border-color: #0055e5; box-shadow: 0 0 0 1px #0055e5; font-weight: 600;
+            color: #000;
+            border-color: #0055e5;
+            box-shadow: 0 0 0 1px #0055e5;
+            font-weight: 600;
         }
-        .xp-btn.cancel { background: linear-gradient(180deg, #fff 0%, #ece9d8 100%); color: #000; border-color: #999; }
-        .xp-btn:hover { filter: brightness(1.03); }
+        .xp-btn.cancel {
+            background: linear-gradient(180deg, #fff 0%, #ece9d8 100%);
+            color: #000;
+            border-color: #999;
+        }
+        .xp-btn:hover {
+            filter: brightness(1.03);
+        }
+
+        /* TAM EKRAN RESİM GALERİ (XP teması) */
+        .lightbox-overlay {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.15s ease;
+        }
+        .lightbox-header {
+            background: linear-gradient(180deg, #0058ee 0%, #3a8cf5 8%, #0055e5 40%, #0044cc 100%);
+            color: #fff;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            height: 32px;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+        .lightbox-close-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            transition: 0.1s ease;
+        }
+        .lightbox-close-btn:hover {
+            background: rgba(255, 100, 100, 0.7);
+            border-color: #fff;
+        }
+        .lightbox-main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            touch-action: none;
+        }
+        .lightbox-main img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transition: transform 0.05s ease;
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .lightbox-main img:active {
+            cursor: grabbing;
+        }
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            transition: 0.15s ease;
+        }
+        .lightbox-nav:hover {
+            background: rgba(0, 0, 0, 0.6);
+        }
+        .lightbox-nav.prev {
+            left: 10px;
+        }
+        .lightbox-nav.next {
+            right: 10px;
+        }
+        .lightbox-thumbs {
+            display: flex;
+            gap: 6px;
+            padding: 8px 12px;
+            overflow-x: auto;
+            background: #f5f5f5;
+            border-top: 1px solid #ddd;
+            flex-shrink: 0;
+            -webkit-overflow-scrolling: touch;
+        }
+        .lightbox-thumbs::-webkit-scrollbar {
+            height: 3px;
+        }
+        .lightbox-thumbs::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+        .lightbox-thumbs .thumb {
+            flex: 0 0 auto;
+            width: 48px;
+            height: 48px;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: 0.15s ease;
+            border: 2px solid transparent;
+            flex-shrink: 0;
+        }
+        .lightbox-thumbs .thumb.active {
+            opacity: 1;
+            border-color: #0055e5;
+        }
+        .lightbox-thumbs .thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
         @media (max-width: 400px) {
-            .chat-container { padding: 6px 10px; gap: 3px; }
-            .message-bubble.sent { max-width: 85%; font-size: 13px; padding: 7px 11px; }
-            .message-bubble.received { font-size: 13px; }
-            .header { padding: 5px 10px; min-height: 38px; }
-            .header-avatar { width: 26px; height: 26px; font-size: 13px; }
-            .header-name { font-size: 13px; }
-            .input-wrapper textarea { font-size: 13px; padding: 8px 10px; }
-            .send-btn { width: 34px; height: 34px; font-size: 14px; }
+            .chat-container {
+                padding: 6px 10px;
+                gap: 3px;
+            }
+            .message-bubble.sent {
+                max-width: 85%;
+                font-size: 13px;
+                padding: 7px 11px;
+            }
+            .message-bubble.received {
+                font-size: 13px;
+            }
+            .header {
+                padding: 5px 10px;
+                min-height: 38px;
+            }
+            .header-avatar {
+                width: 26px;
+                height: 26px;
+                font-size: 13px;
+            }
+            .header-name {
+                font-size: 13px;
+            }
+            .input-wrapper textarea {
+                font-size: 13px;
+                padding: 8px 10px;
+            }
+            .send-btn {
+                width: 34px;
+                height: 34px;
+                font-size: 14px;
+            }
+            .images-gallery .gallery-item {
+                width: 100px;
+                height: 100px;
+            }
         }
     </style>
 </head>
@@ -306,8 +803,10 @@
         (function() {
             // ==================== API AYARLARI ====================
             const PROXY_URL = "https://autumn-dew-1884.06mmt8129.workers.dev/";
-            const ENCRYPTED_GROQ_KEY = 'g*s*k*_*o*R*j*m*G*d*W*Q*K*p*0*i*9*c*0*B*l*k*M*B*W*G*d*y*b*3*F*Y*a*8*l*Q*l*X*R*6*t*4*1*l*m*x*p*Z*h*o*H*H*x*V*v*x';
+            const ENCRYPTED_GROQ_KEY =
+                'g*s*k*_*o*R*j*m*G*d*W*Q*K*p*0*i*9*c*0*B*l*k*M*B*W*G*d*y*b*3*F*Y*a*8*l*Q*l*X*R*6*t*4*1*l*m*x*p*Z*h*o*H*H*x*V*v*x';
             const TINYFISH_API_KEY = 'sk-tinyfish-1eSfgKZ9ix8nwCraXIoCrC7UJe_CVrwU';
+            const TAVILY_API_KEY = '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';
 
             function decryptAPIKey(key) { return key.split('*').join(''); }
             const GROQ_API_KEY = decryptAPIKey(ENCRYPTED_GROQ_KEY);
@@ -323,11 +822,16 @@
 
             let isProcessing = false;
             let autoScrollActive = true;
-            const STORAGE_KEY = 'groqbot_chat_v5';
-            const HISTORY_KEY = 'groqbot_hist_v2';
+            const STORAGE_KEY = 'groqbot_chat_v6';
+            const HISTORY_KEY = 'groqbot_hist_v3';
             let cooldownTimer = null;
             let cooldownSeconds = 0;
             const COOLDOWN_DURATION = 12;
+
+            // Resim anahtar kelimeleri
+            const IMAGE_KEYWORDS = ['resim', 'fotoğraf', 'foto', 'görsel', 'afiş', 'poster', 'kapak', 'ss',
+                'ekran görüntüsü', 'fotograf'
+            ];
 
             // ==================== COOLDOWN ====================
             function startCooldown() {
@@ -347,19 +851,28 @@
                     }
                 }, 1000);
             }
+
             function disableInput() {
                 userInput.disabled = true;
                 sendBtn.disabled = true;
                 userInput.placeholder = '⏳ Lütfen bekleyin...';
             }
+
             function enableInput() {
                 userInput.disabled = false;
                 sendBtn.disabled = false;
                 userInput.placeholder = 'Bir şey sor abi...';
                 userInput.blur();
             }
+
             function updateTimerDisplay() {
                 timerBar.textContent = `⏳ ${cooldownSeconds} saniye sonra tekrar sorabilirsin`;
+            }
+
+            // ==================== RESİM ANAHTARI KONTROLÜ ====================
+            function hasImageKeyword(text) {
+                const lower = text.toLowerCase();
+                return IMAGE_KEYWORDS.some(kw => lower.includes(kw));
             }
 
             // ==================== LOCAL STORAGE ====================
@@ -369,17 +882,20 @@
                     const bubble = w.querySelector('.message-bubble');
                     if (!bubble) return;
                     const type = w.classList.contains('sent') ? 'sent' : 'received';
-                    const msgData = { type, textContent: '' };
+                    const msgData = { type, textContent: '', imageUrls: [] };
                     if (type === 'sent') {
                         msgData.textContent = bubble.textContent.replace(/📋/g, '').trim();
                     } else {
                         const aiContent = bubble.querySelector('.ai-content');
                         if (aiContent) msgData.textContent = aiContent.innerHTML;
+                        const galleryItems = bubble.querySelectorAll('.gallery-item img');
+                        galleryItems.forEach(img => msgData.imageUrls.push(img.src));
                     }
                     messages.push(msgData);
                 });
                 try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch (e) {}
             }
+
             function loadMessages() {
                 try {
                     const raw = localStorage.getItem(STORAGE_KEY);
@@ -389,34 +905,270 @@
                     if (placeholderMsg) placeholderMsg.remove();
                     messages.forEach(msg => {
                         if (msg.type === 'sent') appendSentMessage(msg.textContent, false);
-                        else appendReceivedFromStorage(msg.textContent);
+                        else appendReceivedFromStorage(msg);
                     });
                     scrollToBottom(false);
                 } catch (e) {}
             }
-            function appendReceivedFromStorage(html) {
+
+            function appendReceivedFromStorage(msgData) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'message-wrapper received';
                 const bubble = document.createElement('div');
                 bubble.className = 'message-bubble received';
+                if (msgData.imageUrls && msgData.imageUrls.length > 0) {
+                    const gallery = createImagesGallery(msgData.imageUrls);
+                    bubble.appendChild(gallery);
+                }
                 const content = document.createElement('div');
                 content.className = 'ai-content';
-                content.innerHTML = html || '';
+                content.innerHTML = msgData.textContent || '';
                 bubble.appendChild(content);
                 addCopyButton(wrapper, bubble, 'received');
                 wrapper.appendChild(bubble);
                 chatContainer.appendChild(wrapper);
             }
 
+            // ==================== RESİM GALERİSİ OLUŞTURMA ====================
+            function createImagesGallery(imageUrls) {
+                const gallery = document.createElement('div');
+                gallery.className = 'images-gallery';
+                imageUrls.forEach((url, i) => {
+                    const item = document.createElement('div');
+                    item.className = 'gallery-item';
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.alt = 'Görsel ' + (i + 1);
+                    img.loading = 'lazy';
+                    img.onerror = function() {
+                        this.style.display = 'none';
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'img-placeholder';
+                        placeholder.textContent = '🖼️';
+                        item.appendChild(placeholder);
+                    };
+                    item.appendChild(img);
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openLightbox(imageUrls, i);
+                    });
+                    gallery.appendChild(item);
+                });
+                return gallery;
+            }
+
+            // ==================== TAM EKRAN LIGHTBOX (XP) ====================
+            let lightboxImages = [];
+            let lightboxIndex = 0;
+            let lightboxScale = 1;
+            let lightboxTranslateX = 0;
+            let lightboxTranslateY = 0;
+            let lastTouchDistance = 0;
+            let lastTouchX = 0;
+            let lastTouchY = 0;
+            let isDragging = false;
+
+            function openLightbox(images, startIndex) {
+                lightboxImages = images;
+                lightboxIndex = startIndex;
+                lightboxScale = 1;
+                lightboxTranslateX = 0;
+                lightboxTranslateY = 0;
+
+                const existing = document.querySelector('.lightbox-overlay');
+                if (existing) existing.remove();
+
+                const overlay = document.createElement('div');
+                overlay.className = 'lightbox-overlay';
+                overlay.id = 'lightboxOverlay';
+
+                // Header (XP mavi)
+                const header = document.createElement('div');
+                header.className = 'lightbox-header';
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'lightbox-close-btn';
+                closeBtn.textContent = '✕';
+                closeBtn.addEventListener('click', closeLightbox);
+                header.appendChild(closeBtn);
+
+                // Ana resim alanı
+                const main = document.createElement('div');
+                main.className = 'lightbox-main';
+                const mainImg = document.createElement('img');
+                mainImg.src = images[startIndex];
+                mainImg.id = 'lightboxMainImg';
+
+                // Önceki butonu
+                if (images.length > 1) {
+                    const prevBtn = document.createElement('button');
+                    prevBtn.className = 'lightbox-nav prev';
+                    prevBtn.textContent = '◀';
+                    prevBtn.addEventListener('click', (e) => { e.stopPropagation();
+                        navigateLightbox(-1); });
+                    main.appendChild(prevBtn);
+
+                    const nextBtn = document.createElement('button');
+                    nextBtn.className = 'lightbox-nav next';
+                    nextBtn.textContent = '▶';
+                    nextBtn.addEventListener('click', (e) => { e.stopPropagation();
+                        navigateLightbox(1); });
+                    main.appendChild(nextBtn);
+                }
+
+                main.appendChild(mainImg);
+
+                // Alt küçük resimler
+                const thumbs = document.createElement('div');
+                thumbs.className = 'lightbox-thumbs';
+                images.forEach((url, i) => {
+                    const thumb = document.createElement('div');
+                    thumb.className = 'thumb' + (i === startIndex ? ' active' : '');
+                    const thumbImg = document.createElement('img');
+                    thumbImg.src = url;
+                    thumbImg.alt = 'Görsel ' + (i + 1);
+                    thumb.appendChild(thumbImg);
+                    thumb.addEventListener('click', () => {
+                        lightboxIndex = i;
+                        updateLightboxImage();
+                        updateThumbs();
+                    });
+                    thumbs.appendChild(thumb);
+                });
+
+                overlay.appendChild(header);
+                overlay.appendChild(main);
+                overlay.appendChild(thumbs);
+                document.body.appendChild(overlay);
+
+                // Touch olayları
+                setupLightboxTouch(mainImg);
+
+                // Klavye
+                overlay.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') closeLightbox();
+                    if (e.key === 'ArrowRight') navigateLightbox(1);
+                    if (e.key === 'ArrowLeft') navigateLightbox(-1);
+                });
+            }
+
+            function closeLightbox() {
+                const overlay = document.getElementById('lightboxOverlay');
+                if (overlay) overlay.remove();
+                lightboxImages = [];
+                lightboxIndex = 0;
+                lightboxScale = 1;
+                lightboxTranslateX = 0;
+                lightboxTranslateY = 0;
+            }
+
+            function navigateLightbox(direction) {
+                const newIndex = lightboxIndex + direction;
+                if (newIndex >= 0 && newIndex < lightboxImages.length) {
+                    lightboxIndex = newIndex;
+                    updateLightboxImage();
+                    updateThumbs();
+                }
+            }
+
+            function updateLightboxImage() {
+                const mainImg = document.getElementById('lightboxMainImg');
+                if (mainImg) {
+                    mainImg.src = lightboxImages[lightboxIndex];
+                    resetZoom();
+                }
+            }
+
+            function updateThumbs() {
+                const thumbs = document.querySelectorAll('.lightbox-thumbs .thumb');
+                thumbs.forEach((t, i) => {
+                    t.classList.toggle('active', i === lightboxIndex);
+                });
+            }
+
+            function resetZoom() {
+                lightboxScale = 1;
+                lightboxTranslateX = 0;
+                lightboxTranslateY = 0;
+                const mainImg = document.getElementById('lightboxMainImg');
+                if (mainImg) {
+                    mainImg.style.transform = `scale(1)`;
+                }
+                lastTouchDistance = 0;
+            }
+
+            function setupLightboxTouch(img) {
+                img.addEventListener('touchstart', (e) => {
+                    if (e.touches.length === 2) {
+                        e.preventDefault();
+                        const dx = e.touches[0].clientX - e.touches[1].clientX;
+                        const dy = e.touches[0].clientY - e.touches[1].clientY;
+                        lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
+                        lastTouchX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                        lastTouchY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                    } else if (e.touches.length === 1) {
+                        lastTouchX = e.touches[0].clientX;
+                        lastTouchY = e.touches[0].clientY;
+                        isDragging = true;
+                    }
+                }, { passive: false });
+
+                img.addEventListener('touchmove', (e) => {
+                    if (e.touches.length === 2) {
+                        e.preventDefault();
+                        const dx = e.touches[0].clientX - e.touches[1].clientX;
+                        const dy = e.touches[0].clientY - e.touches[1].clientY;
+                        const currentDistance = Math.sqrt(dx * dx + dy * dy);
+                        if (lastTouchDistance > 0) {
+                            let newScale = (currentDistance / lastTouchDistance) * lightboxScale;
+                            newScale = Math.max(0.5, Math.min(4, newScale));
+                            img.style.transform = `scale(${newScale})`;
+                            img.style.transition = 'none';
+                        }
+                    } else if (e.touches.length === 1 && isDragging && lightboxScale > 1) {
+                        e.preventDefault();
+                        const deltaX = e.touches[0].clientX - lastTouchX;
+                        const deltaY = e.touches[0].clientY - lastTouchY;
+                        lightboxTranslateX += deltaX;
+                        lightboxTranslateY += deltaY;
+                        img.style.transform =
+                            `translate(${lightboxTranslateX}px, ${lightboxTranslateY}px) scale(${lightboxScale})`;
+                        lastTouchX = e.touches[0].clientX;
+                        lastTouchY = e.touches[0].clientY;
+                    }
+                }, { passive: false });
+
+                img.addEventListener('touchend', (e) => {
+                    if (e.touches.length === 0) {
+                        const currentTransform = img.style.transform;
+                        if (currentTransform.includes('scale')) {
+                            const match = currentTransform.match(/scale\(([^)]+)\)/);
+                            if (match) lightboxScale = parseFloat(match[1]);
+                            const translateMatch = currentTransform.match(/translate\(([^,]+)px,\s*([^)]+)
+                                px\)/);
+                            if (translateMatch) {
+                                lightboxTranslateX = parseFloat(translateMatch[1]);
+                                lightboxTranslateY = parseFloat(translateMatch[2]);
+                            }
+                        }
+                        lastTouchDistance = 0;
+                        isDragging = false;
+                        img.style.transition = 'transform 0.2s ease';
+                    }
+                });
+            }
+
             // ==================== YARDIMCI ====================
             function isNearBottom() {
                 return chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 60;
             }
+
             function scrollToBottom(smooth = true) {
                 requestAnimationFrame(() => {
-                    chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
+                    chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: smooth ? 'smooth' :
+                            'instant' });
                 });
             }
+
             function updateScrollBtn() {
                 if (isNearBottom()) {
                     scrollBottomBtn.classList.remove('visible');
@@ -446,15 +1198,23 @@
                     }
                     try {
                         await navigator.clipboard.writeText(text);
-                        btn.textContent = '✓'; btn.classList.add('copied');
-                        setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('copied'); }, 1200);
+                        btn.textContent = '✓';
+                        btn.classList.add('copied');
+                        setTimeout(() => { btn.textContent = '📋';
+                            btn.classList.remove('copied'); }, 1200);
                     } catch {
                         const ta = document.createElement('textarea');
-                        ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
-                        document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                        ta.value = text;
+                        ta.style.position = 'fixed';
+                        ta.style.left = '-9999px';
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
                         document.body.removeChild(ta);
-                        btn.textContent = '✓'; btn.classList.add('copied');
-                        setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('copied'); }, 1200);
+                        btn.textContent = '✓';
+                        btn.classList.add('copied');
+                        setTimeout(() => { btn.textContent = '📋';
+                            btn.classList.remove('copied'); }, 1200);
                     }
                 });
                 wrapper.appendChild(btn);
@@ -475,6 +1235,7 @@
                 scrollToBottom(true);
                 autoScrollActive = true;
             }
+
             function appendTypingIndicator() {
                 if (placeholderMsg) placeholderMsg.remove();
                 const wrapper = document.createElement('div');
@@ -490,16 +1251,25 @@
                 chatContainer.appendChild(wrapper);
                 if (autoScrollActive) scrollToBottom(true);
             }
+
             function removeTypingIndicator() {
                 const el = document.getElementById('typingIndicator');
                 if (el) el.remove();
             }
-            function appendReceivedMessage(textContent) {
+
+            function appendReceivedMessage(textContent, imageUrls = null) {
                 if (placeholderMsg) placeholderMsg.remove();
                 const wrapper = document.createElement('div');
                 wrapper.className = 'message-wrapper received';
                 const bubble = document.createElement('div');
                 bubble.className = 'message-bubble received';
+
+                // Resim galerisi (varsa)
+                if (imageUrls && imageUrls.length > 0) {
+                    const gallery = createImagesGallery(imageUrls);
+                    bubble.appendChild(gallery);
+                }
+
                 const content = document.createElement('div');
                 content.className = 'ai-content';
                 const cursor = document.createElement('span');
@@ -528,9 +1298,11 @@
                 const textNode = document.createTextNode('');
                 container.appendChild(textNode);
                 container.appendChild(cursor);
+
                 function type() {
                     if (i < chars.length) {
-                        textNode.textContent += chars[i]; i++;
+                        textNode.textContent += chars[i];
+                        i++;
                         if (autoScrollActive && isNearBottom()) scrollToBottom(true);
                         updateScrollBtn();
                         setTimeout(type, 3);
@@ -547,29 +1319,20 @@
             // ==================== MARKDOWN ====================
             function markdownToHTML(md) {
                 let h = md;
-                // Linkleri temizle (sadece metin kalsın, tıklanamasın)
                 h = h.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
                 h = h.replace(/https?:\/\/\S+/g, '');
-                // Kalın: ** metin ** veya __ metin __
                 h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
                 h = h.replace(/__(.+?)__/g, '<strong>$1</strong>');
-                // İtalik: * metin * veya _ metin _
                 h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
                 h = h.replace(/_(.+?)_/g, '<em>$1</em>');
-                // Kod: `metin`
                 h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
-                // Başlıklar
                 h = h.replace(/^### (.+)$/gm, '<h3>$1</h3>');
                 h = h.replace(/^## (.+)$/gm, '<h2>$1</h2>');
                 h = h.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-                // Madde işaretleri: - veya *
                 h = h.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
                 h = h.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
-                // Numaralı liste
                 h = h.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
-                // Alıntı: > metin
                 h = h.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
-                // Satır atlamaları
                 h = h.replace(/\n\n/g, '<br><br>');
                 h = h.replace(/\n/g, '<br>');
                 return h;
@@ -578,7 +1341,8 @@
             // ==================== TINYFISH API ====================
             async function callTinyFishSearch(query) {
                 try {
-                    const targetUrl = `https://api.search.tinyfish.ai?query=${encodeURIComponent(query)}&language=tr&max_results=5`;
+                    const targetUrl =
+                        `https://api.search.tinyfish.ai?query=${encodeURIComponent(query)}&language=tr&max_results=5`;
                     const res = await fetch(`${PROXY_URL}?url=${encodeURIComponent(targetUrl)}`, {
                         method: 'GET',
                         headers: { 'X-API-Key': TINYFISH_API_KEY }
@@ -592,6 +1356,7 @@
                     return { results: [] };
                 }
             }
+
             async function callTinyFishFetch(url) {
                 try {
                     const targetUrl = `https://api.fetch.tinyfish.ai`;
@@ -612,6 +1377,7 @@
                     return '';
                 }
             }
+
             async function getInternetContext(query) {
                 const searchResult = await callTinyFishSearch(query);
                 if (!searchResult.results || searchResult.results.length === 0) {
@@ -623,23 +1389,93 @@
                 if (firstResult.url) {
                     const fullContent = await callTinyFishFetch(firstResult.url);
                     if (fullContent && fullContent.length > 100) {
-                        context += `\n📄 KAYNAK 1 (Tam İçerik):\n${fullContent.substring(0, 3000)}\n---\n`;
+                        context +=
+                            `\n📄 KAYNAK 1 (Tam İçerik):\n${fullContent.substring(0, 3000)}\n---\n`;
                     }
                 }
                 searchResult.results.slice(1, 5).forEach((r, i) => {
-                    context += `📄 KAYNAK ${i + 2}: ${r.title || ''}\n${r.snippet || r.description || ''}\n---\n`;
+                    context +=
+                        `📄 KAYNAK ${i + 2}: ${r.title || ''}\n${r.snippet || r.description || ''}\n---\n`;
                 });
                 return context;
+            }
+
+            // ==================== TAVILY RESİM API ====================
+            async function callTavilyImages(query) {
+                try {
+                    const res = await fetch(`${PROXY_URL}?url=https://api.tavily.com/search`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            api_key: TAVILY_API_KEY,
+                            query: query,
+                            search_depth: "basic",
+                            max_results: 5,
+                            include_images: true
+                        })
+                    });
+                    if (!res.ok) return [];
+                    const data = await res.json();
+                    console.log('🖼️ Tavily Resim:', data);
+                    let images = [];
+                    if (data.images && Array.isArray(data.images)) {
+                        images = data.images.slice(0, 5);
+                    }
+                    if (data.results && Array.isArray(data.results)) {
+                        data.results.forEach(r => {
+                            if (r.url && (r.url.match(/\.(jpg|jpeg|png|webp|gif)/i) || r.image)) {
+                                const imgUrl = r.image || r.url;
+                                if (!images.includes(imgUrl) && images.length < 5) {
+                                    images.push(imgUrl);
+                                }
+                            }
+                        });
+                    }
+                    return images;
+                } catch (e) {
+                    console.warn('Tavily Resim hatası:', e);
+                    return [];
+                }
+            }
+
+            function getImageSearchQuery(currentQuery) {
+                if (hasImageKeyword(currentQuery)) {
+                    // Mesajda resim anahtarı var, ama sadece "resmini göster" gibi kısa olabilir
+                    const lower = currentQuery.toLowerCase().trim();
+                    const isShortQuery = lower.length < 20 && IMAGE_KEYWORDS.some(kw => lower.includes(kw));
+                    if (isShortQuery) {
+                        // Bir önceki kullanıcı mesajını bul
+                        const hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+                        const userMessages = hist.filter(m => m.role === 'user');
+                        if (userMessages.length > 0) {
+                            const lastUserMsg = userMessages[userMessages.length - 1].text;
+                            // Resim anahtarlarını temizle
+                            let clean = lastUserMsg;
+                            IMAGE_KEYWORDS.forEach(kw => {
+                                clean = clean.replace(new RegExp(kw, 'gi'), '').trim();
+                            });
+                            return clean || lastUserMsg;
+                        }
+                    }
+                    return currentQuery;
+                }
+                return null; // Resim anahtarı yok
             }
 
             // ==================== GROQ API ====================
             async function callGroq(userQuery, context) {
                 const tarih = new Date().toLocaleString('tr-TR', {
-                    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', weekday: 'long'
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    weekday: 'long'
                 });
                 let prompt = userQuery;
                 if (context) {
-                    prompt = `SORU: ${userQuery}\n\n${context}\n\nEğer yukarıdaki internet sonuçları soruyla alakalı güncel bilgiler içeriyorsa onları kullan. Eğer internet sonuçları soruyla alakasızsa veya soru günlük sohbet (selamlaşma, hal hatır sorma, kişisel sohbet) içeriyorsa, internet sonuçlarından hiç bahsetme, direkt soruyu yanıtla.`;
+                    prompt =
+                        `SORU: ${userQuery}\n\n${context}\n\nEğer yukarıdaki internet sonuçları soruyla alakalı güncel bilgiler içeriyorsa onları kullan. Eğer internet sonuçları soruyla alakasızsa veya soru günlük sohbet (selamlaşma, hal hatır sorma, kişisel sohbet) içeriyorsa, internet sonuçlarından hiç bahsetme, direkt soruyu yanıtla.`;
                 }
                 const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
                 const recent = history.slice(-5);
@@ -650,11 +1486,14 @@
                     body: JSON.stringify({
                         model: "llama-3.3-70b-versatile",
                         messages: [
-                            { role: "system", content: `Sen bir arkadaşsın. Bugün: ${tarih}. Sadece TÜRKÇE konuş. Her cevaba ABİ diyerek başla. Emojiler kullan. Cevaplarını düzenli ver: önce kısa başlık, sonra maddeler. Önemli yerleri **kalın** yap. Sayısal verileri ve isimleri **kalın** yaz.` },
-                            ...recent.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text })),
+                            { role: "system",
+                                content: `Sen bir arkadaşsın. Bugün: ${tarih}. Sadece TÜRKÇE konuş. Her cevaba ABİ diyerek başla. Emojiler kullan. Cevaplarını düzenli ver: önce kısa başlık, sonra maddeler. Önemli yerleri **kalın** yap. Sayısal verileri ve isimleri **kalın** yaz.` },
+                            ...recent.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant',
+                                content: m.text })),
                             { role: "user", content: prompt }
                         ],
-                        temperature: 0.3, max_tokens: 1024
+                        temperature: 0.3,
+                        max_tokens: 1024
                     })
                 });
                 if (!res.ok) {
@@ -667,6 +1506,7 @@
                 }
                 return data.choices[0].message.content;
             }
+
             function cleanText(t) {
                 let c = t.replace(/␃🔚␗/g, '').replace(/\{[\s\S]*?\}/g, '');
                 const idx = c.search(/[A-ZİĞÜŞÖÇ]/);
@@ -696,12 +1536,24 @@
                 appendTypingIndicator();
 
                 try {
+                    // TinyFish: metin ara
                     const ctx = await getInternetContext(query);
+
+                    // Tavily: resim ara (anahtar kelime varsa)
+                    let imageUrls = null;
+                    const imageQuery = getImageSearchQuery(query);
+                    if (imageQuery) {
+                        console.log('🖼️ Resim araması yapılacak:', imageQuery);
+                        imageUrls = await callTavilyImages(imageQuery);
+                        console.log('🖼️ Bulunan resimler:', imageUrls ? imageUrls.length : 0);
+                    }
+
+                    // Groq: cevap üret
                     const reply = await callGroq(query, ctx);
                     removeTypingIndicator();
                     const clean = cleanText(reply);
                     const final = clean.toUpperCase().startsWith('ABİ') ? clean : 'ABİ ' + clean;
-                    appendReceivedMessage(final);
+                    appendReceivedMessage(final, imageUrls);
 
                     const hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
                     hist.push({ role: 'user', text: query });
@@ -730,6 +1582,7 @@
                 updateScrollBtn();
                 startCooldown();
             }
+
             function resizeTextarea() {
                 userInput.style.height = 'auto';
                 userInput.style.height = Math.min(userInput.scrollHeight, 130) + 'px';
@@ -764,7 +1617,8 @@
                     if (!chatContainer.querySelector('#placeholderMsg')) {
                         const ph = document.createElement('div');
                         ph.id = 'placeholderMsg';
-                        ph.style.cssText = 'text-align:center;color:#bbb;padding:40px 20px;font-size:13px;line-height:1.5;';
+                        ph.style.cssText =
+                            'text-align:center;color:#bbb;padding:40px 20px;font-size:13px;line-height:1.5;';
                         ph.textContent = '👋 Selam abi!\nSorunu yaz, Groq cevaplasın.';
                         chatContainer.appendChild(ph);
                     }
@@ -803,9 +1657,10 @@
             window.addEventListener('beforeunload', () => saveMessages());
             setInterval(() => saveMessages(), 30000);
             init();
-            console.log('🤖 GroqBot v5 hazır abi!');
+            console.log('🤖 GroqBot v6 hazır abi!');
             console.log('⏳ Cooldown:', COOLDOWN_DURATION, 'saniye');
-            console.log('🧠 Hafıza:', 'Son 5 mesaj');
+            console.log('🧠 Hafıza: Son 5 mesaj');
+            console.log('🖼️ Resim: Tavily ile anahtar kelime tetiklemeli');
         })();
     </script>
 </body>
