@@ -924,9 +924,9 @@
 
             let isProcessing = false;
             let autoScrollActive = true;
-            const STORAGE_KEY = 'groqbot_chat_v7';
-            const HISTORY_KEY = 'groqbot_hist_v4';
-            const IMG_CACHE_KEY = 'groqbot_img_cache';
+            const STORAGE_KEY = 'groqbot_chat_v8';
+            const HISTORY_KEY = 'groqbot_hist_v5';
+            const IMG_CACHE_KEY = 'groqbot_img_cache_v2';
             let cooldownTimer = null;
             let cooldownSeconds = 0;
             const COOLDOWN_DURATION = 12;
@@ -1016,8 +1016,10 @@
                     } else {
                         const aiContent = bubble.querySelector('.ai-content');
                         if (aiContent) msgData.textContent = aiContent.innerHTML;
-                        const galleryItems = bubble.querySelectorAll('.gallery-item img');
-                        galleryItems.forEach(img => msgData.imageUrls.push(img.src));
+                        const allImgs = bubble.querySelectorAll('.gallery-item img, .grid-item img');
+                        const urls = [];
+                        allImgs.forEach(img => { if (img.src && !urls.includes(img.src)) urls.push(img.src); });
+                        msgData.imageUrls = urls;
                     }
                     messages.push(msgData);
                 });
@@ -1050,37 +1052,29 @@
                     const msgId = msgData.msgId;
                     if (msgId && isMsgCached(msgId)) {
                         const cached = getCachedImages(msgId);
-                        const tabsContainer = createTabsContainer(cached.slice(0, 7), cached);
+                        const tabsContainer = createTabsContainer(cached.slice(0, 7), cached, msgData.textContent);
                         bubble.appendChild(tabsContainer);
                     } else {
                         const reloadBtn = createReloadButton(msgData.imageUrls.slice(0, 7), msgData.imageUrls,
-                            msgId);
+                            msgId, msgData.textContent);
                         bubble.appendChild(reloadBtn);
-                        const content = document.createElement('div');
-                        content.className = 'ai-content';
-                        content.innerHTML = msgData.textContent || '';
-                        bubble.appendChild(content);
-                        addCopyButton(wrapper, bubble, 'received');
-                        wrapper.appendChild(bubble);
-                        chatContainer.appendChild(wrapper);
-                        return;
                     }
+                } else {
+                    const content = document.createElement('div');
+                    content.className = 'ai-content';
+                    content.innerHTML = msgData.textContent || '';
+                    bubble.appendChild(content);
                 }
 
-                const content = document.createElement('div');
-                content.className = 'ai-content';
-                content.innerHTML = msgData.textContent || '';
-                bubble.appendChild(content);
                 addCopyButton(wrapper, bubble, 'received');
                 wrapper.appendChild(bubble);
                 chatContainer.appendChild(wrapper);
             }
 
             // ==================== SEKME YAPISI ====================
-            function createTabsContainer(galleryImages, allImages) {
+            function createTabsContainer(galleryImages, allImages, textHTML) {
                 const container = document.createElement('div');
 
-                // Sekme butonları
                 const tabsContainer = document.createElement('div');
                 tabsContainer.className = 'tabs-container';
                 const tabAI = document.createElement('button');
@@ -1092,7 +1086,7 @@
                 tabsContainer.appendChild(tabAI);
                 tabsContainer.appendChild(tabImg);
 
-                // AI Cevap içeriği
+                // AI Cevap içeriği (resim galerisi + metin)
                 const contentAI = document.createElement('div');
                 contentAI.className = 'tab-content active';
                 if (galleryImages.length > 0) {
@@ -1101,10 +1095,10 @@
                 }
                 const aiText = document.createElement('div');
                 aiText.className = 'ai-content';
-                aiText.innerHTML = '<span class="cursor-blink"></span>';
+                aiText.innerHTML = textHTML || '';
                 contentAI.appendChild(aiText);
 
-                // Görseller içeriği
+                // Görseller içeriği (sadece grid + Daha Fazla, metin YOK)
                 const contentImg = document.createElement('div');
                 contentImg.className = 'tab-content';
                 const grid = document.createElement('div');
@@ -1138,7 +1132,6 @@
                 container.appendChild(contentAI);
                 container.appendChild(contentImg);
 
-                // Sekme geçişleri
                 tabAI.addEventListener('click', (e) => {
                     e.stopPropagation();
                     tabAI.classList.add('active');
@@ -1169,40 +1162,43 @@
                     item.appendChild(img);
                     item.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        const allImgs = Array.from(grid.querySelectorAll('img')).map(i => i.src)
-                            .filter(s => s);
+                        const allImgs = Array.from(grid.querySelectorAll('img')).map(i => i.src).filter(
+                            s => s);
                         openLightbox(allImgs, allImgs.indexOf(url));
                     });
                     grid.appendChild(item);
                 });
             }
 
-            function createReloadButton(galleryUrls, allUrls, msgId) {
+            function createReloadButton(galleryUrls, allUrls, msgId, textHTML) {
+                const container = document.createElement('div');
                 const btn = document.createElement('button');
                 btn.className = 'reload-images-btn';
                 btn.textContent = '🖼️ 7 resim mevcut — Yüklemek için tıkla';
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     if (msgId) cacheMsgImages(msgId, allUrls);
-                    const parent = btn.parentElement;
-                    const wrapper = parent.parentElement;
+                    const parent = container.parentElement;
                     const bubble = parent;
-                    const existingContent = bubble.querySelector('.ai-content');
-                    const textHTML = existingContent ? existingContent.innerHTML : '';
                     bubble.innerHTML = '';
-                    const tabsContainer = createTabsContainer(allUrls.slice(0, 7), allUrls);
+                    const tabsContainer = createTabsContainer(allUrls.slice(0, 7), allUrls, textHTML);
                     bubble.appendChild(tabsContainer);
-                    const newAiContent = bubble.querySelector('.ai-content');
-                    if (newAiContent && textHTML) {
-                        newAiContent.innerHTML = textHTML;
-                    }
+                    const wrapper = bubble.closest('.message-wrapper');
                     if (wrapper) {
                         const oldCopyBtn = wrapper.querySelector('.copy-btn');
                         if (oldCopyBtn) oldCopyBtn.remove();
                         addCopyButton(wrapper, bubble, 'received');
                     }
                 });
-                return btn;
+                container.appendChild(btn);
+                // Metin içeriğini de ekle
+                if (textHTML) {
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'ai-content';
+                    textDiv.innerHTML = textHTML;
+                    container.appendChild(textDiv);
+                }
+                return container;
             }
 
             // ==================== RESİM GALERİSİ ====================
@@ -1532,20 +1528,28 @@
 
                 if (imageUrls && imageUrls.length > 0) {
                     cacheMsgImages(msgId, imageUrls);
-                    const tabsContainer = createTabsContainer(imageUrls.slice(0, 7), imageUrls);
+                    const tabsContainer = createTabsContainer(imageUrls.slice(0, 7), imageUrls, '');
                     bubble.appendChild(tabsContainer);
+                    const aiContent = bubble.querySelector('.ai-content');
+                    if (aiContent) {
+                        const cursor = document.createElement('span');
+                        cursor.className = 'cursor-blink';
+                        aiContent.appendChild(cursor);
+                        typewriterEffect(aiContent, textContent, () => saveMessages());
+                    }
+                } else {
+                    const content = document.createElement('div');
+                    content.className = 'ai-content';
+                    const cursor = document.createElement('span');
+                    cursor.className = 'cursor-blink';
+                    content.appendChild(cursor);
+                    bubble.appendChild(content);
+                    typewriterEffect(content, textContent, () => saveMessages());
                 }
 
-                const content = document.createElement('div');
-                content.className = 'ai-content';
-                const cursor = document.createElement('span');
-                cursor.className = 'cursor-blink';
-                content.appendChild(cursor);
-                bubble.appendChild(content);
                 addCopyButton(wrapper, bubble, 'received');
                 wrapper.appendChild(bubble);
                 chatContainer.appendChild(wrapper);
-                typewriterEffect(content, textContent, () => saveMessages());
                 if (autoScrollActive) scrollToBottom(true);
                 return wrapper;
             }
@@ -1557,8 +1561,8 @@
                 const temp = document.createElement('div');
                 temp.innerHTML = html;
                 const plain = (temp.textContent || temp.innerText || '').trim();
-                container.innerHTML = '';
                 if (!plain) { container.innerHTML = html; if (onComplete) onComplete(); return; }
+                container.innerHTML = '';
                 let i = 0;
                 const chars = [...plain];
                 const textNode = document.createTextNode('');
@@ -1697,7 +1701,6 @@
                             }
                         });
                     }
-                    // Sağlam resimleri ayıklamak için hepsini döndür, gösterme sırasında elenecek
                     return images;
                 } catch (e) {
                     console.warn('Tavily Resim hatası:', e);
@@ -1807,8 +1810,7 @@
                     if (imageQuery) {
                         console.log('🖼️ Resim araması yapılacak:', imageQuery);
                         imageUrls = await callTavilyImages(imageQuery);
-                        console.log('🖼️ Bulunan resimler (sağlam olmayanlar dahil):', imageUrls ? imageUrls.length :
-                            0);
+                        console.log('🖼️ Bulunan resimler:', imageUrls ? imageUrls.length : 0);
                     }
                     const reply = await callGroq(query, ctx);
                     removeTypingIndicator();
@@ -1919,7 +1921,7 @@
             window.addEventListener('beforeunload', () => saveMessages());
             setInterval(() => saveMessages(), 30000);
             init();
-            console.log('🤖 GroqBot v7 hazır abi!');
+            console.log('🤖 GroqBot v8 hazır abi!');
             console.log('🖼️ Sekmeli görsel sistemi aktif');
             console.log('💾 Resim önbelleği:', IMG_CACHE_KEY);
         })();
