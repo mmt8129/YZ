@@ -639,8 +639,11 @@
                     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', weekday: 'long'
                 });
                 let prompt = userQuery;
-                if (context) prompt = `SORU: ${userQuery}\n\n${context}\n\nYukarıdaki internet sonuçlarına dayanarak bu soruyu yanıtla.`;
-                const history = JSON.parse(localStorage.getItem('groqbot_hist') || '[]');
+if (context) {
+    prompt = `SORU: ${userQuery}\n\n${context}\n\nEğer yukarıdaki internet sonuçları soruyla alakalı güncel bilgiler içeriyorsa onları kullan. Eğer internet sonuçları soruyla alakasızsa veya soru günlük sohbet (selamlaşma, hal hatır sorma, kişisel sohbet) içeriyorsa, internet sonuçlarından hiç bahsetme, direkt soruyu yanıtla.`;
+} else {
+    prompt = userQuery;
+}                const history = JSON.parse(localStorage.getItem('groqbot_hist') || '[]');
                 const recent = history.slice(-4);
 
                 const res = await fetch(`${PROXY_URL}?url=https://api.groq.com/openai/v1/chat/completions`, {
