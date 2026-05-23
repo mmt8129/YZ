@@ -8,8 +8,6 @@
         :root {
             --bg: #ffffff;
             --chat-bg: #ffffff;
-            --sent-bg: #1a73e8;
-            --sent-text: #ffffff;
             --received-text: #111b21;
             --input-bg: #f5f5f5;
             --header-bg: #f8f9fa;
@@ -198,18 +196,37 @@
                 transform: translateY(0);
             }
         }
+
+        /* XP Temalı Giden Mesaj */
         .message-bubble.sent {
-            background: var(--sent-bg);
-            color: var(--sent-text);
+            background: #fff;
+            color: #000;
             max-width: 78%;
-            padding: 8px 13px;
-            border-radius: 14px 4px 14px 14px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            border: 1px solid #0055e5;
+            border-radius: 4px 4px 0 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
             word-wrap: break-word;
             line-height: 1.4;
             font-size: 14px;
             position: relative;
+            overflow: hidden;
         }
+        .message-bubble.sent .xp-sent-titlebar {
+            background: linear-gradient(180deg, #0058ee 0%, #3a8cf5 8%, #0055e5 40%, #0044cc 100%);
+            color: #fff;
+            padding: 3px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            letter-spacing: 0.02em;
+        }
+        .message-bubble.sent .xp-sent-body {
+            padding: 8px 12px;
+        }
+
         .message-bubble.received {
             background: transparent;
             color: var(--received-text);
@@ -219,83 +236,37 @@
             font-size: 14px;
             padding: 6px 0;
         }
-
-        /* Sekme butonları - XP tarzı */
-        .tabs-container {
-            display: flex;
-            gap: 0;
-            margin-bottom: 2px;
-            flex-shrink: 0;
-        }
-        .tab-btn {
-            flex: 1;
-            padding: 6px 12px;
-            border: 1px solid #0055e5;
-            background: #e8e8e8;
-            color: #333;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            text-align: center;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            transition: 0.1s ease;
-            outline: none;
-            white-space: nowrap;
-        }
-        .tab-btn:first-child {
-            border-radius: 4px 0 0 0;
-        }
-        .tab-btn:last-child {
-            border-radius: 0 4px 0 0;
-        }
-        .tab-btn.active {
-            background: linear-gradient(180deg, #0058ee 0%, #3a8cf5 8%, #0055e5 40%, #0044cc 100%);
-            color: #fff;
-            border-color: #0044cc;
-        }
-        .tab-btn:not(.active):hover {
-            background: #d0d0d0;
-        }
-
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-
-        /* AI Cevap içeriği */
-        .ai-content {
+        .message-bubble.received .ai-content {
             padding: 0;
             min-height: 20px;
             line-height: 1.5;
             color: #111b21;
         }
-        .ai-content p {
+        .message-bubble.received .ai-content p {
             margin: 4px 0;
         }
-        .ai-content strong {
+        .message-bubble.received .ai-content strong {
             font-weight: 600;
         }
-        .ai-content em {
+        .message-bubble.received .ai-content em {
             font-style: italic;
         }
-        .ai-content ul,
-        .ai-content ol {
+        .message-bubble.received .ai-content ul,
+        .message-bubble.received .ai-content ol {
             margin: 4px 0;
             padding-left: 18px;
         }
-        .ai-content li {
+        .message-bubble.received .ai-content li {
             margin: 1px 0;
         }
-        .ai-content code {
+        .message-bubble.received .ai-content code {
             background: #f1f3f4;
             padding: 2px 5px;
             border-radius: 3px;
             font-size: 13px;
             font-family: 'SF Mono', 'Consolas', monospace;
         }
-        .ai-content pre {
+        .message-bubble.received .ai-content pre {
             background: #1e1e1e;
             color: #d4d4d4;
             padding: 10px;
@@ -304,50 +275,32 @@
             margin: 6px 0;
             font-size: 12px;
         }
-        .ai-content pre code {
+        .message-bubble.received .ai-content pre code {
             background: transparent;
             color: inherit;
             padding: 0;
         }
-        .ai-content a {
+        .message-bubble.received .ai-content a {
             color: #1a73e8;
             text-decoration: none;
             pointer-events: none;
             cursor: default;
         }
-        .ai-content h1,
-        .ai-content h2,
-        .ai-content h3 {
+        .message-bubble.received .ai-content h1,
+        .message-bubble.received .ai-content h2,
+        .message-bubble.received .ai-content h3 {
             margin: 6px 0 3px;
             font-weight: 600;
             font-size: 15px;
         }
-        .ai-content blockquote {
+        .message-bubble.received .ai-content blockquote {
             border-left: 2px solid #4285f4;
             padding-left: 8px;
             color: #666;
             margin: 4px 0;
         }
-        .cursor-blink {
-            display: inline-block;
-            width: 2px;
-            height: 15px;
-            background: #111b21;
-            margin-left: 1px;
-            animation: blink 0.7s infinite;
-            vertical-align: text-bottom;
-        }
-        @keyframes blink {
-            0%,
-            100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0;
-            }
-        }
 
-        /* Sohbet içi resim galerisi (7 resim yatay) */
+        /* Sohbet içi resim galerisi */
         .images-gallery {
             display: flex;
             gap: 4px;
@@ -378,36 +331,6 @@
             object-fit: cover;
             display: block;
         }
-        .images-gallery .gallery-item .img-placeholder {
-            width: 100%;
-            height: 100%;
-            background: #f0f0f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #bbb;
-            font-size: 24px;
-        }
-
-        /* Görseller sekmesi grid */
-        .images-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 4px;
-        }
-        .images-grid .grid-item {
-            aspect-ratio: 1 / 1;
-            border-radius: 4px;
-            overflow: hidden;
-            cursor: pointer;
-            background: #f0f0f0;
-        }
-        .images-grid .grid-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
 
         /* Yenile butonu */
         .reload-images-btn {
@@ -427,26 +350,6 @@
         }
         .reload-images-btn:hover {
             filter: brightness(1.03);
-        }
-
-        /* Daha Fazla butonu */
-        .load-more-btn {
-            width: 100%;
-            padding: 10px;
-            margin-top: 8px;
-            border: 1px solid #0055e5;
-            border-radius: 6px;
-            background: linear-gradient(180deg, #0058ee 0%, #3a8cf5 8%, #0055e5 40%, #0044cc 100%);
-            color: #fff;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            text-align: center;
-            transition: 0.1s ease;
-        }
-        .load-more-btn:hover {
-            filter: brightness(1.1);
         }
 
         .copy-btn {
@@ -481,13 +384,9 @@
             font-weight: bold;
         }
         .message-wrapper.sent .copy-btn {
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(0, 0, 0, 0.5);
             right: 4px;
             bottom: 0px;
-        }
-        .message-wrapper.sent .copy-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: #fff;
         }
         .message-wrapper.received .copy-btn {
             right: -2px;
@@ -720,11 +619,13 @@
             display: flex;
             align-items: center;
             justify-content: flex-end;
+            gap: 6px;
             height: 32px;
             flex-shrink: 0;
             z-index: 10;
         }
-        .lightbox-close-btn {
+        .lightbox-close-btn,
+        .lightbox-save-btn {
             width: 26px;
             height: 26px;
             border-radius: 3px;
@@ -742,6 +643,10 @@
         }
         .lightbox-close-btn:hover {
             background: rgba(255, 100, 100, 0.7);
+            border-color: #fff;
+        }
+        .lightbox-save-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
             border-color: #fff;
         }
         .lightbox-main {
@@ -839,7 +744,6 @@
             .message-bubble.sent {
                 max-width: 85%;
                 font-size: 13px;
-                padding: 7px 11px;
             }
             .message-bubble.received {
                 font-size: 13px;
@@ -924,9 +828,9 @@
 
             let isProcessing = false;
             let autoScrollActive = true;
-            const STORAGE_KEY = 'groqbot_chat_v8';
-            const HISTORY_KEY = 'groqbot_hist_v5';
-            const IMG_CACHE_KEY = 'groqbot_img_cache_v2';
+            const STORAGE_KEY = 'groqbot_chat_v9';
+            const HISTORY_KEY = 'groqbot_hist_v6';
+            const IMG_CACHE_KEY = 'groqbot_img_cache_v3';
             let cooldownTimer = null;
             let cooldownSeconds = 0;
             const COOLDOWN_DURATION = 12;
@@ -971,7 +875,6 @@
                 timerBar.textContent = `⏳ ${cooldownSeconds} saniye sonra tekrar sorabilirsin`;
             }
 
-            // ==================== RESİM ANAHTARI ====================
             function hasImageKeyword(text) {
                 const lower = text.toLowerCase();
                 return IMAGE_KEYWORDS.some(kw => lower.includes(kw));
@@ -1012,14 +915,13 @@
                     const msgId = w.dataset.msgId || '';
                     const msgData = { type, textContent: '', imageUrls: [], msgId };
                     if (type === 'sent') {
-                        msgData.textContent = bubble.textContent.replace(/📋/g, '').trim();
+                        msgData.textContent = bubble.querySelector('.xp-sent-body')?.textContent || bubble
+                            .textContent.replace(/📋/g, '').trim();
                     } else {
                         const aiContent = bubble.querySelector('.ai-content');
                         if (aiContent) msgData.textContent = aiContent.innerHTML;
-                        const allImgs = bubble.querySelectorAll('.gallery-item img, .grid-item img');
-                        const urls = [];
-                        allImgs.forEach(img => { if (img.src && !urls.includes(img.src)) urls.push(img.src); });
-                        msgData.imageUrls = urls;
+                        const imgs = bubble.querySelectorAll('.gallery-item img');
+                        imgs.forEach(img => msgData.imageUrls.push(img.src));
                     }
                     messages.push(msgData);
                 });
@@ -1052,156 +954,38 @@
                     const msgId = msgData.msgId;
                     if (msgId && isMsgCached(msgId)) {
                         const cached = getCachedImages(msgId);
-                        const tabsContainer = createTabsContainer(cached.slice(0, 7), cached, msgData.textContent);
-                        bubble.appendChild(tabsContainer);
+                        const gallery = createImagesGallery(cached);
+                        bubble.appendChild(gallery);
                     } else {
-                        const reloadBtn = createReloadButton(msgData.imageUrls.slice(0, 7), msgData.imageUrls,
-                            msgId, msgData.textContent);
+                        const reloadBtn = createReloadButton(msgData.imageUrls, msgId);
                         bubble.appendChild(reloadBtn);
                     }
-                } else {
-                    const content = document.createElement('div');
-                    content.className = 'ai-content';
-                    content.innerHTML = msgData.textContent || '';
-                    bubble.appendChild(content);
                 }
 
+                const content = document.createElement('div');
+                content.className = 'ai-content';
+                content.innerHTML = msgData.textContent || '';
+                bubble.appendChild(content);
                 addCopyButton(wrapper, bubble, 'received');
                 wrapper.appendChild(bubble);
                 chatContainer.appendChild(wrapper);
             }
 
-            // ==================== SEKME YAPISI ====================
-            function createTabsContainer(galleryImages, allImages, textHTML) {
-                const container = document.createElement('div');
-
-                const tabsContainer = document.createElement('div');
-                tabsContainer.className = 'tabs-container';
-                const tabAI = document.createElement('button');
-                tabAI.className = 'tab-btn active';
-                tabAI.textContent = '🤖 AI Cevap';
-                const tabImg = document.createElement('button');
-                tabImg.className = 'tab-btn';
-                tabImg.textContent = `🖼️ Görseller (${allImages.length})`;
-                tabsContainer.appendChild(tabAI);
-                tabsContainer.appendChild(tabImg);
-
-                // AI Cevap içeriği (resim galerisi + metin)
-                const contentAI = document.createElement('div');
-                contentAI.className = 'tab-content active';
-                if (galleryImages.length > 0) {
-                    const gallery = createImagesGallery(galleryImages);
-                    contentAI.appendChild(gallery);
-                }
-                const aiText = document.createElement('div');
-                aiText.className = 'ai-content';
-                aiText.innerHTML = textHTML || '';
-                contentAI.appendChild(aiText);
-
-                // Görseller içeriği (sadece grid + Daha Fazla, metin YOK)
-                const contentImg = document.createElement('div');
-                contentImg.className = 'tab-content';
-                const grid = document.createElement('div');
-                grid.className = 'images-grid';
-                const visible = allImages.slice(0, 9);
-                renderGridItems(grid, visible);
-                contentImg.appendChild(grid);
-                if (allImages.length > 9) {
-                    const loadMoreBtn = document.createElement('button');
-                    loadMoreBtn.className = 'load-more-btn';
-                    loadMoreBtn.textContent = `+ Daha Fazla (${allImages.length - 9} resim)`;
-                    let offset = 9;
-                    loadMoreBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const next = allImages.slice(offset, offset + 9);
-                        renderGridItems(grid, next);
-                        offset += 9;
-                        if (offset >= allImages.length) {
-                            loadMoreBtn.textContent = '✓ Tümü Gösterildi';
-                            loadMoreBtn.disabled = true;
-                            loadMoreBtn.style.opacity = '0.6';
-                        } else {
-                            loadMoreBtn.textContent =
-                                `+ Daha Fazla (${allImages.length - offset} resim)`;
-                        }
-                    });
-                    contentImg.appendChild(loadMoreBtn);
-                }
-
-                container.appendChild(tabsContainer);
-                container.appendChild(contentAI);
-                container.appendChild(contentImg);
-
-                tabAI.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    tabAI.classList.add('active');
-                    tabImg.classList.remove('active');
-                    contentAI.classList.add('active');
-                    contentImg.classList.remove('active');
-                });
-                tabImg.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    tabImg.classList.add('active');
-                    tabAI.classList.remove('active');
-                    contentImg.classList.add('active');
-                    contentAI.classList.remove('active');
-                });
-
-                return container;
-            }
-
-            function renderGridItems(grid, images) {
-                images.forEach(url => {
-                    const item = document.createElement('div');
-                    item.className = 'grid-item';
-                    const img = document.createElement('img');
-                    img.src = url;
-                    img.alt = 'Görsel';
-                    img.loading = 'lazy';
-                    img.onerror = function() { this.parentElement.style.display = 'none'; };
-                    item.appendChild(img);
-                    item.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const allImgs = Array.from(grid.querySelectorAll('img')).map(i => i.src).filter(
-                            s => s);
-                        openLightbox(allImgs, allImgs.indexOf(url));
-                    });
-                    grid.appendChild(item);
-                });
-            }
-
-            function createReloadButton(galleryUrls, allUrls, msgId, textHTML) {
-                const container = document.createElement('div');
+            function createReloadButton(imageUrls, msgId) {
                 const btn = document.createElement('button');
                 btn.className = 'reload-images-btn';
-                btn.textContent = '🖼️ 7 resim mevcut — Yüklemek için tıkla';
+                btn.textContent = `🖼️ ${imageUrls.length} resim mevcut — Yüklemek için tıkla`;
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    if (msgId) cacheMsgImages(msgId, allUrls);
-                    const parent = container.parentElement;
-                    const bubble = parent;
-                    bubble.innerHTML = '';
-                    const tabsContainer = createTabsContainer(allUrls.slice(0, 7), allUrls, textHTML);
-                    bubble.appendChild(tabsContainer);
-                    const wrapper = bubble.closest('.message-wrapper');
-                    if (wrapper) {
-                        const oldCopyBtn = wrapper.querySelector('.copy-btn');
-                        if (oldCopyBtn) oldCopyBtn.remove();
-                        addCopyButton(wrapper, bubble, 'received');
-                    }
+                    if (msgId) cacheMsgImages(msgId, imageUrls);
+                    const bubble = btn.parentElement;
+                    const gallery = createImagesGallery(imageUrls);
+                    bubble.insertBefore(gallery, btn);
+                    btn.remove();
                 });
-                container.appendChild(btn);
-                // Metin içeriğini de ekle
-                if (textHTML) {
-                    const textDiv = document.createElement('div');
-                    textDiv.className = 'ai-content';
-                    textDiv.innerHTML = textHTML;
-                    container.appendChild(textDiv);
-                }
-                return container;
+                return btn;
             }
 
-            // ==================== RESİM GALERİSİ ====================
             function createImagesGallery(imageUrls) {
                 const gallery = document.createElement('div');
                 gallery.className = 'images-gallery';
@@ -1216,7 +1000,8 @@
                     item.appendChild(img);
                     item.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        openLightbox(imageUrls, i);
+                        const validUrls = imageUrls.filter(u => u && u.startsWith('http'));
+                        openLightbox(validUrls, validUrls.indexOf(url));
                     });
                     gallery.appendChild(item);
                 });
@@ -1250,10 +1035,22 @@
 
                 const header = document.createElement('div');
                 header.className = 'lightbox-header';
+
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'lightbox-save-btn';
+                saveBtn.textContent = '💾';
+                saveBtn.title = 'Resmi Kaydet';
+                saveBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    downloadCurrentImage();
+                });
+
                 const closeBtn = document.createElement('button');
                 closeBtn.className = 'lightbox-close-btn';
                 closeBtn.textContent = '✕';
                 closeBtn.addEventListener('click', closeLightbox);
+
+                header.appendChild(saveBtn);
                 header.appendChild(closeBtn);
 
                 const main = document.createElement('div');
@@ -1303,12 +1100,22 @@
                 document.body.appendChild(overlay);
 
                 setupLightboxTouch(mainImg);
-
                 overlay.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') closeLightbox();
                     if (e.key === 'ArrowRight') navigateLightbox(1);
                     if (e.key === 'ArrowLeft') navigateLightbox(-1);
                 });
+            }
+
+            function downloadCurrentImage() {
+                const mainImg = document.getElementById('lightboxMainImg');
+                if (!mainImg || !mainImg.src) return;
+                const link = document.createElement('a');
+                link.href = mainImg.src;
+                link.download = 'resim_' + Date.now() + '.jpg';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             }
 
             function closeLightbox() {
@@ -1340,9 +1147,7 @@
 
             function updateThumbs() {
                 const thumbs = document.querySelectorAll('.lightbox-thumbs .thumb');
-                thumbs.forEach((t, i) => {
-                    t.classList.toggle('active', i === lightboxIndex);
-                });
+                thumbs.forEach((t, i) => { t.classList.toggle('active', i === lightboxIndex); });
             }
 
             function resetZoom() {
@@ -1350,9 +1155,7 @@
                 lightboxTranslateX = 0;
                 lightboxTranslateY = 0;
                 const mainImg = document.getElementById('lightboxMainImg');
-                if (mainImg) {
-                    mainImg.style.transform = 'scale(1)';
-                }
+                if (mainImg) mainImg.style.transform = 'scale(1)';
                 lastTouchDistance = 0;
             }
 
@@ -1371,49 +1174,38 @@
                         isDragging = true;
                     }
                 }, { passive: false });
-
                 img.addEventListener('touchmove', (e) => {
                     if (e.touches.length === 2) {
                         e.preventDefault();
                         const dx = e.touches[0].clientX - e.touches[1].clientX;
                         const dy = e.touches[0].clientY - e.touches[1].clientY;
-                        const currentDistance = Math.sqrt(dx * dx + dy * dy);
+                        const cd = Math.sqrt(dx * dx + dy * dy);
                         if (lastTouchDistance > 0) {
-                            let newScale = (currentDistance / lastTouchDistance) * lightboxScale;
-                            newScale = Math.max(0.5, Math.min(4, newScale));
-                            img.style.transform = `scale(${newScale})`;
+                            let ns = (cd / lastTouchDistance) * lightboxScale;
+                            ns = Math.max(0.5, Math.min(4, ns));
+                            img.style.transform = `scale(${ns})`;
                             img.style.transition = 'none';
                         }
                     } else if (e.touches.length === 1 && isDragging && lightboxScale > 1) {
                         e.preventDefault();
-                        const deltaX = e.touches[0].clientX - lastTouchX;
-                        const deltaY = e.touches[0].clientY - lastTouchY;
-                        lightboxTranslateX += deltaX;
-                        lightboxTranslateY += deltaY;
+                        lightboxTranslateX += e.touches[0].clientX - lastTouchX;
+                        lightboxTranslateY += e.touches[0].clientY - lastTouchY;
                         img.style.transform =
                             `translate(${lightboxTranslateX}px, ${lightboxTranslateY}px) scale(${lightboxScale})`;
                         lastTouchX = e.touches[0].clientX;
                         lastTouchY = e.touches[0].clientY;
                     }
                 }, { passive: false });
-
-                img.addEventListener('touchend', (e) => {
-                    if (e.touches.length === 0) {
-                        const currentTransform = img.style.transform;
-                        if (currentTransform.includes('scale')) {
-                            const match = currentTransform.match(/scale\(([^)]+)\)/);
-                            if (match) lightboxScale = parseFloat(match[1]);
-                            const translateMatch = currentTransform.match(
-                                /translate\(([^,]+)px,\s*([^)]+)px\)/);
-                            if (translateMatch) {
-                                lightboxTranslateX = parseFloat(translateMatch[1]);
-                                lightboxTranslateY = parseFloat(translateMatch[2]);
-                            }
-                        }
-                        lastTouchDistance = 0;
-                        isDragging = false;
-                        img.style.transition = 'transform 0.2s ease';
-                    }
+                img.addEventListener('touchend', () => {
+                    const t = img.style.transform;
+                    const sm = t.match(/scale\(([^)]+)\)/);
+                    if (sm) lightboxScale = parseFloat(sm[1]);
+                    const tm = t.match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
+                    if (tm) { lightboxTranslateX = parseFloat(tm[1]);
+                        lightboxTranslateY = parseFloat(tm[2]); }
+                    lastTouchDistance = 0;
+                    isDragging = false;
+                    img.style.transition = 'transform 0.2s ease';
                 });
             }
 
@@ -1451,7 +1243,8 @@
                 btn.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     let text = '';
-                    if (type === 'sent') text = bubble.textContent.replace(/📋/g, '').trim();
+                    if (type === 'sent') text = (bubble.querySelector('.xp-sent-body')?.textContent || bubble
+                        .textContent).replace(/📋/g, '').trim();
                     else {
                         const c = bubble.querySelector('.ai-content');
                         text = c ? (c.textContent || c.innerText).trim() : '';
@@ -1487,7 +1280,14 @@
                 wrapper.className = 'message-wrapper sent';
                 const bubble = document.createElement('div');
                 bubble.className = 'message-bubble sent';
-                bubble.textContent = text;
+                const titlebar = document.createElement('div');
+                titlebar.className = 'xp-sent-titlebar';
+                titlebar.textContent = '📝 Sen';
+                const body = document.createElement('div');
+                body.className = 'xp-sent-body';
+                body.textContent = text;
+                bubble.appendChild(titlebar);
+                bubble.appendChild(body);
                 wrapper.appendChild(bubble);
                 addCopyButton(wrapper, bubble, 'sent');
                 chatContainer.appendChild(wrapper);
@@ -1528,62 +1328,20 @@
 
                 if (imageUrls && imageUrls.length > 0) {
                     cacheMsgImages(msgId, imageUrls);
-                    const tabsContainer = createTabsContainer(imageUrls.slice(0, 7), imageUrls, '');
-                    bubble.appendChild(tabsContainer);
-                    const aiContent = bubble.querySelector('.ai-content');
-                    if (aiContent) {
-                        const cursor = document.createElement('span');
-                        cursor.className = 'cursor-blink';
-                        aiContent.appendChild(cursor);
-                        typewriterEffect(aiContent, textContent, () => saveMessages());
-                    }
-                } else {
-                    const content = document.createElement('div');
-                    content.className = 'ai-content';
-                    const cursor = document.createElement('span');
-                    cursor.className = 'cursor-blink';
-                    content.appendChild(cursor);
-                    bubble.appendChild(content);
-                    typewriterEffect(content, textContent, () => saveMessages());
+                    const gallery = createImagesGallery(imageUrls);
+                    bubble.appendChild(gallery);
                 }
 
+                const content = document.createElement('div');
+                content.className = 'ai-content';
+                content.innerHTML = markdownToHTML(textContent);
+                bubble.appendChild(content);
                 addCopyButton(wrapper, bubble, 'received');
                 wrapper.appendChild(bubble);
                 chatContainer.appendChild(wrapper);
                 if (autoScrollActive) scrollToBottom(true);
+                saveMessages();
                 return wrapper;
-            }
-
-            // ==================== DAKTİLO ====================
-            function typewriterEffect(container, rawText, onComplete) {
-                const html = markdownToHTML(rawText);
-                const cursor = container.querySelector('.cursor-blink');
-                const temp = document.createElement('div');
-                temp.innerHTML = html;
-                const plain = (temp.textContent || temp.innerText || '').trim();
-                if (!plain) { container.innerHTML = html; if (onComplete) onComplete(); return; }
-                container.innerHTML = '';
-                let i = 0;
-                const chars = [...plain];
-                const textNode = document.createTextNode('');
-                container.appendChild(textNode);
-                container.appendChild(cursor);
-
-                function type() {
-                    if (i < chars.length) {
-                        textNode.textContent += chars[i];
-                        i++;
-                        if (autoScrollActive && isNearBottom()) scrollToBottom(true);
-                        updateScrollBtn();
-                        setTimeout(type, 3);
-                    } else {
-                        cursor.remove();
-                        container.innerHTML = html;
-                        if (onComplete) onComplete();
-                        updateScrollBtn();
-                    }
-                }
-                type();
             }
 
             // ==================== MARKDOWN ====================
@@ -1618,13 +1376,8 @@
                         headers: { 'X-API-Key': TINYFISH_API_KEY }
                     });
                     if (!res.ok) return { results: [] };
-                    const data = await res.json();
-                    console.log('🔍 TinyFish Search:', data);
-                    return data;
-                } catch (e) {
-                    console.warn('TinyFish Search hatası:', e);
-                    return { results: [] };
-                }
+                    return await res.json();
+                } catch (e) { return { results: [] }; }
             }
 
             async function callTinyFishFetch(url) {
@@ -1632,40 +1385,29 @@
                     const targetUrl = `https://api.fetch.tinyfish.ai`;
                     const res = await fetch(`${PROXY_URL}?url=${encodeURIComponent(targetUrl)}`, {
                         method: 'POST',
-                        headers: {
-                            'X-API-Key': TINYFISH_API_KEY,
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { 'X-API-Key': TINYFISH_API_KEY, 'Content-Type': 'application/json' },
                         body: JSON.stringify({ urls: [url], format: 'markdown' })
                     });
                     if (!res.ok) return '';
                     const data = await res.json();
-                    console.log('📄 TinyFish Fetch:', data);
                     return data.content || data.markdown || data.text || '';
-                } catch (e) {
-                    console.warn('TinyFish Fetch hatası:', e);
-                    return '';
-                }
+                } catch (e) { return ''; }
             }
 
             async function getInternetContext(query) {
                 const searchResult = await callTinyFishSearch(query);
-                if (!searchResult.results || searchResult.results.length === 0) {
-                    console.log('⚠️ TinyFish arama sonucu boş');
-                    return '';
-                }
+                if (!searchResult.results || searchResult.results.length === 0) return '';
                 let context = 'GÜNCEL İNTERNET ARAMA SONUÇLARI:\n';
                 const firstResult = searchResult.results[0];
                 if (firstResult.url) {
                     const fullContent = await callTinyFishFetch(firstResult.url);
                     if (fullContent && fullContent.length > 100) {
                         context +=
-                            `\n📄 KAYNAK 1 (Tam İçerik):\n${fullContent.substring(0, 3000)}\n---\n`;
+                        `\n📄 KAYNAK 1 (Tam İçerik):\n${fullContent.substring(0, 3000)}\n---\n`;
                     }
                 }
                 searchResult.results.slice(1, 5).forEach((r, i) => {
-                    context +=
-                        `📄 KAYNAK ${i + 2}: ${r.title || ''}\n${r.snippet || r.description || ''}\n---\n`;
+                    context += `📄 KAYNAK ${i + 2}: ${r.title || ''}\n${r.snippet || r.description || ''}\n---\n`;
                 });
                 return context;
             }
@@ -1680,32 +1422,14 @@
                             api_key: TAVILY_API_KEY,
                             query: query,
                             search_depth: "basic",
-                            max_results: 40,
+                            max_results: 5,
                             include_images: true
                         })
                     });
                     if (!res.ok) return [];
                     const data = await res.json();
-                    console.log('🖼️ Tavily Resim:', data);
-                    let images = [];
-                    if (data.images && Array.isArray(data.images)) {
-                        images = data.images.slice(0, 40);
-                    }
-                    if (data.results && Array.isArray(data.results)) {
-                        data.results.forEach(r => {
-                            if (r.url && (r.url.match(/\.(jpg|jpeg|png|webp|gif)/i) || r.image)) {
-                                const imgUrl = r.image || r.url;
-                                if (!images.includes(imgUrl) && images.length < 40) {
-                                    images.push(imgUrl);
-                                }
-                            }
-                        });
-                    }
-                    return images;
-                } catch (e) {
-                    console.warn('Tavily Resim hatası:', e);
-                    return [];
-                }
+                    return data.images || [];
+                } catch (e) { return []; }
             }
 
             function getImageSearchQuery(currentQuery) {
@@ -1764,14 +1488,9 @@
                         max_tokens: 1024
                     })
                 });
-                if (!res.ok) {
-                    const errText = await res.text();
-                    throw new Error(`Groq API (${res.status}): ${errText}`);
-                }
+                if (!res.ok) throw new Error(`Groq API (${res.status})`);
                 const data = await res.json();
-                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-                    throw new Error('Groq beklenmeyen yanıt: ' + JSON.stringify(data));
-                }
+                if (!data.choices?.[0]?.message) throw new Error('Groq boş yanıt');
                 return data.choices[0].message.content;
             }
 
@@ -1779,14 +1498,12 @@
                 let c = t.replace(/␃🔚␗/g, '').replace(/\{[\s\S]*?\}/g, '');
                 const idx = c.search(/[A-ZİĞÜŞÖÇ]/);
                 if (idx !== -1) c = c.substring(idx);
-                c = c.replace(/[\s\}\]奉",:]{2,}$/g, '');
-                return c;
+                return c.replace(/[\s\}\]奉",:]{2,}$/g, '');
             }
 
             // ==================== ANA İŞLEM ====================
             async function handleSend() {
-                if (isProcessing) return;
-                if (cooldownTimer) return;
+                if (isProcessing || cooldownTimer) return;
                 const query = userInput.value.trim();
                 if (!query) return;
                 if (query.toUpperCase() === 'CLS') {
@@ -1804,23 +1521,23 @@
                 appendTypingIndicator();
 
                 try {
-                    const ctx = await getInternetContext(query);
-                    let imageUrls = null;
+                    // Paralel istek: TinyFish + Tavily aynı anda
                     const imageQuery = getImageSearchQuery(query);
-                    if (imageQuery) {
-                        console.log('🖼️ Resim araması yapılacak:', imageQuery);
-                        imageUrls = await callTavilyImages(imageQuery);
-                        console.log('🖼️ Bulunan resimler:', imageUrls ? imageUrls.length : 0);
-                    }
+                    const promises = [getInternetContext(query)];
+                    if (imageQuery) promises.push(callTavilyImages(imageQuery));
+                    else promises.push(Promise.resolve(null));
+
+                    const [ctx, imageUrls] = await Promise.all(promises);
+
                     const reply = await callGroq(query, ctx);
                     removeTypingIndicator();
-                    const clean = cleanText(reply);
-                    const final = clean.toUpperCase().startsWith('ABİ') ? clean : 'ABİ ' + clean;
-                    appendReceivedMessage(final, imageUrls);
+                    const final = cleanText(reply);
+                    const finalText = final.toUpperCase().startsWith('ABİ') ? final : 'ABİ ' + final;
+                    appendReceivedMessage(finalText, imageUrls && imageUrls.length > 0 ? imageUrls : null);
 
                     const hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
                     hist.push({ role: 'user', text: query });
-                    hist.push({ role: 'ai', text: final });
+                    hist.push({ role: 'ai', text: finalText });
                     if (hist.length > 40) hist.splice(0, hist.length - 40);
                     localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
                 } catch (err) {
@@ -1889,41 +1606,31 @@
                     scrollBottomBtn.classList.remove('visible');
                     close();
                 });
-                dialog.addEventListener('keydown', e => {
-                    if (e.key === 'Escape') close();
-                    if (e.key === 'Enter') ok.click();
-                });
+                dialog.addEventListener('keydown', e => { if (e.key === 'Escape') close(); if (e.key === 'Enter') ok
+                        .click(); });
                 setTimeout(() => ok.focus(), 100);
             }
 
             // ==================== EVENTLER ====================
             sendBtn.addEventListener('click', handleSend);
-            userInput.addEventListener('keydown', e => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault();
-                    handleSend(); }
-            });
+            userInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault();
+                    handleSend(); } });
             userInput.addEventListener('input', resizeTextarea);
             clearBtn.addEventListener('click', showXPClearConfirm);
             chatContainer.addEventListener('scroll', updateScrollBtn);
-            scrollBottomBtn.addEventListener('click', () => {
-                scrollToBottom(true);
+            scrollBottomBtn.addEventListener('click', () => { scrollToBottom(true);
                 autoScrollActive = true;
-                scrollBottomBtn.classList.remove('visible');
-            });
+                scrollBottomBtn.classList.remove('visible'); });
             window.addEventListener('resize', updateScrollBtn);
 
-            function init() {
-                loadMessages();
+            function init() { loadMessages();
                 scrollToBottom(false);
                 resizeTextarea();
-                updateScrollBtn();
-            }
+                updateScrollBtn(); }
             window.addEventListener('beforeunload', () => saveMessages());
             setInterval(() => saveMessages(), 30000);
             init();
-            console.log('🤖 GroqBot v8 hazır abi!');
-            console.log('🖼️ Sekmeli görsel sistemi aktif');
-            console.log('💾 Resim önbelleği:', IMG_CACHE_KEY);
+            console.log('🤖 GroqBot v9 hazır abi!');
         })();
     </script>
 </body>
