@@ -893,17 +893,12 @@
     }
 }
 
-            async function saveMessagesToFirebase() {
+           async function saveMessagesToFirebase() {
     const id = localStorage.getItem('groqbot_fb_chatId');
-    if (!id) {
-        console.warn('⚠️ chatId yok, Firebase kaydı atlanıyor');
-        return;
-    }
+    if (!id) return;
     const messages = collectMessages();
-    console.log('💾 Firebase kayıt:', id, messages.length + ' mesaj');
     try {
         await db.ref('chats/' + id + '/messages').set(messages);
-        console.log('✅ Firebase kayıt başarılı');
     } catch (e) {
         console.warn('Firebase kayıt hatası:', e);
     }
@@ -1470,7 +1465,7 @@
             window.addEventListener('resize', updateScrollBtn);
 
           async function init() {
-    chatId = localStorage.getItem('groqbot_fb_chatId');
+   // chatId = localStorage.getItem('groqbot_fb_chatId');
     if (!chatId) {
         const newRef = db.ref('chats').push();
         chatId = newRef.key;
@@ -1478,7 +1473,7 @@
     }
     
     // Aynen manuel çekmedeki gibi
-    const id = localStorage.getItem('groqbot_fb_chatId');
+   // const id = localStorage.getItem('groqbot_fb_chatId');
     if (id) {
         const snap = await firebase.database().ref('chats/' + id + '/messages').once('value');
         const data = snap.val();
