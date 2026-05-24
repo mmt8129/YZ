@@ -172,7 +172,6 @@
             transform: scale(0.92);
             background: #f0f0f0;
         }
-
         .message-wrapper {
             display: flex;
             width: 100%;
@@ -196,20 +195,18 @@
                 transform: translateY(0);
             }
         }
-
-  .message-bubble.sent {
-    background: #0d47a1;
-    color: #fff;
-    max-width: 78%;
-    padding: 8px 13px;
-    border-radius: 14px 4px 14px 14px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    word-wrap: break-word;
-    line-height: 1.4;
-    font-size: 18px;
-    position: relative;
-}
-  
+        .message-bubble.sent {
+            background: #0d47a1;
+            color: #fff;
+            max-width: 78%;
+            padding: 8px 13px;
+            border-radius: 14px 4px 14px 14px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
+            line-height: 1.4;
+            font-size: 18px;
+            position: relative;
+        }
         .message-bubble.received {
             background: transparent;
             color: var(--received-text);
@@ -282,8 +279,6 @@
             color: #666;
             margin: 4px 0;
         }
-
-        /* Sohbet içi resim galerisi */
         .images-gallery {
             display: flex;
             gap: 4px;
@@ -314,8 +309,6 @@
             object-fit: cover;
             display: block;
         }
-
-        /* Yenile butonu */
         .reload-images-btn {
             width: 100%;
             padding: 12px;
@@ -334,7 +327,6 @@
         .reload-images-btn:hover {
             filter: brightness(1.03);
         }
-
         .copy-btn {
             position: absolute;
             bottom: -2px;
@@ -367,7 +359,7 @@
             font-weight: bold;
         }
         .message-wrapper.sent .copy-btn {
-            color: rgba(0, 0, 0, 0.5);
+            color: rgba(255, 255, 255, 0.7);
             right: 4px;
             bottom: 0px;
         }
@@ -375,7 +367,6 @@
             right: -2px;
             bottom: -2px;
         }
-
         .typing-indicator {
             display: flex;
             align-items: center;
@@ -407,7 +398,6 @@
                 opacity: 1;
             }
         }
-
         .input-area {
             background: var(--input-bg);
             padding: 6px 10px;
@@ -492,8 +482,6 @@
             min-height: 16px;
             transition: opacity 0.3s ease;
         }
-
-        /* XP Modal */
         .xp-overlay {
             position: fixed;
             inset: 0;
@@ -584,8 +572,6 @@
         .xp-btn:hover {
             filter: brightness(1.03);
         }
-
-        /* TAM EKRAN RESİM GALERİ (XP teması) */
         .lightbox-overlay {
             position: fixed;
             inset: 0;
@@ -718,7 +704,6 @@
             height: 100%;
             object-fit: cover;
         }
-
         @media (max-width: 400px) {
             .chat-container {
                 padding: 6px 10px;
@@ -762,13 +747,13 @@
 <body>
     <div class="app-container" id="appContainer">
         <div class="header">
-            <div class="header-avatar"> </div>
+            <div class="header-avatar">🤖</div>
             <div class="header-info">
-                <div class="header-name">Groq</div>
+                <div class="header-name">GroqBot</div>
                 <div class="header-status"><span class="dot"></span> AKTİF</div>
             </div>
             <div class="header-actions">
-                <button class="btn-icon" id="clearBtn" title="Sohbeti Temizle">SOHBETİ SİL</button>
+                <button class="btn-icon" id="clearBtn" title="Sohbeti Temizle">🗑️</button>
             </div>
         </div>
         <div class="chat-container" id="chatContainer">
@@ -821,9 +806,8 @@
 
             let isProcessing = false;
             let autoScrollActive = true;
-            const STORAGE_KEY = 'groqbot_chat_v10';
-            const HISTORY_KEY = 'groqbot_hist_v7';
-            const IMG_CACHE_KEY = 'groqbot_img_cache_v4';
+            const HISTORY_KEY = 'groqbot_hist_v8';
+            const IMG_CACHE_KEY = 'groqbot_img_cache_v5';
             let cooldownTimer = null;
             let cooldownSeconds = 0;
             const COOLDOWN_DURATION = 12;
@@ -834,6 +818,7 @@
 
             // ==================== COOLDOWN ====================
             function startCooldown() {
+                if (cooldownTimer) return;
                 cooldownSeconds = COOLDOWN_DURATION;
                 disableInput();
                 updateTimerDisplay();
@@ -850,47 +835,55 @@
                     }
                 }, 1000);
             }
+
             function disableInput() {
                 userInput.disabled = true;
                 sendBtn.disabled = true;
                 userInput.placeholder = '⏳ Lütfen bekleyin...';
             }
+
             function enableInput() {
+                if (cooldownTimer) return;
                 userInput.disabled = false;
                 sendBtn.disabled = false;
                 userInput.placeholder = 'Bir şey sor ...';
-                userInput.blur();
             }
+
             function updateTimerDisplay() {
                 timerBar.textContent = `⏳ ${cooldownSeconds} saniye sonra tekrar sorabilirsin`;
             }
+
             function hasImageKeyword(text) {
                 const lower = text.toLowerCase();
                 return IMAGE_KEYWORDS.some(kw => lower.includes(kw));
             }
 
-            // ==================== RESİM ÖNBELLEK ====================
+            // ==================== RESİM ÖNBELLEK (SADECE LOCAL) ====================
             function getImgCache() {
                 try { return JSON.parse(localStorage.getItem(IMG_CACHE_KEY) || '{}'); } catch (e) { return {}; }
             }
+
             function saveImgCache(cache) {
                 try { localStorage.setItem(IMG_CACHE_KEY, JSON.stringify(cache)); } catch (e) {}
             }
+
             function isMsgCached(msgId) {
                 const cache = getImgCache();
                 return !!cache[msgId];
             }
+
             function cacheMsgImages(msgId, urls) {
                 const cache = getImgCache();
                 cache[msgId] = urls;
                 saveImgCache(cache);
             }
+
             function getCachedImages(msgId) {
                 const cache = getImgCache();
                 return cache[msgId] || [];
             }
 
-            // ==================== FIREBASE SENKRONİZASYONU ====================
+            // ==================== FIREBASE İŞLEMLERİ ====================
             async function initFirebaseChat() {
                 chatId = localStorage.getItem('groqbot_fb_chatId');
                 if (!chatId) {
@@ -898,47 +891,50 @@
                     chatId = newRef.key;
                     localStorage.setItem('groqbot_fb_chatId', chatId);
                 }
-                loadFirebaseMessages();
-                db.ref('chats/' + chatId + '/messages').on('value', (snap) => {
-                    const data = snap.val();
-                    if (data && Array.isArray(data) && data.length > 0) {
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-                    }
-                });
+                await loadFirebaseMessages();
             }
-            function saveMessagesToFirebase() {
+
+            async function saveMessagesToFirebase() {
                 if (!chatId) return;
                 const messages = collectMessages();
-                db.ref('chats/' + chatId + '/messages').set(messages).catch(() => {});
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-            }
-           async function loadFirebaseMessages() {
-    if (!chatId) return;
-    try {
-        const snap = await db.ref('chats/' + chatId + '/messages').once('value');
-        const data = snap.val();
-        if (data && Array.isArray(data) && data.length > 0) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            // Mevcut mesajları temizle
-            chatContainer.querySelectorAll('.message-wrapper').forEach(w => w.remove());
-            const ph = document.getElementById('placeholderMsg');
-            if (ph) ph.remove();
-            // Mesajları yükle
-            data.forEach(msg => {
-                if (msg.type === 'sent') {
-                    appendSentMessage(msg.textContent, false);
-                } else {
-                    appendReceivedFromStorage(msg);
+                try {
+                    await db.ref('chats/' + chatId + '/messages').set(messages);
+                } catch (e) {
+                    console.warn('Firebase kayıt hatası:', e);
                 }
-            });
-            scrollToBottom(false);
-        } else {
-            loadMessagesFromStorage();
-        }
-    } catch (e) {
-        loadMessagesFromStorage();
-    }
-}
+            }
+
+            async function loadFirebaseMessages() {
+                if (!chatId) return;
+                try {
+                    const snap = await db.ref('chats/' + chatId + '/messages').once('value');
+                    const data = snap.val();
+                    if (data && Array.isArray(data) && data.length > 0) {
+                        chatContainer.querySelectorAll('.message-wrapper').forEach(w => w.remove());
+                        const ph = document.getElementById('placeholderMsg');
+                        if (ph) ph.remove();
+                        data.forEach(msg => {
+                            if (msg.type === 'sent') appendSentMessage(msg.textContent, false);
+                            else appendReceivedFromStorage(msg);
+                        });
+                        scrollToBottom(false);
+                    }
+                } catch (e) {
+                    console.warn('Firebase yükleme hatası:', e);
+                }
+            }
+
+            async function clearFirebaseChat() {
+                if (!chatId) return;
+                try {
+                    await db.ref('chats/' + chatId).remove();
+                    localStorage.removeItem('groqbot_fb_chatId');
+                    chatId = null;
+                } catch (e) {
+                    console.warn('Firebase silme hatası:', e);
+                }
+            }
+
             function collectMessages() {
                 const messages = [];
                 chatContainer.querySelectorAll('.message-wrapper').forEach(w => {
@@ -959,28 +955,14 @@
                 });
                 return messages;
             }
-            function loadMessagesFromStorage() {
-                try {
-                    const raw = localStorage.getItem(STORAGE_KEY);
-                    if (!raw) return;
-                    const messages = JSON.parse(raw);
-                    if (!Array.isArray(messages) || messages.length === 0) return;
-                    chatContainer.querySelectorAll('.message-wrapper').forEach(w => w.remove());
-                    if (placeholderMsg) placeholderMsg.remove();
-                    if (chatContainer.querySelector('#placeholderMsg')) return;
-                    messages.forEach(msg => {
-                        if (msg.type === 'sent') appendSentMessage(msg.textContent, false);
-                        else appendReceivedFromStorage(msg);
-                    });
-                    scrollToBottom(false);
-                } catch (e) {}
-            }
+
             function appendReceivedFromStorage(msgData) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'message-wrapper received';
                 wrapper.dataset.msgId = msgData.msgId || '';
                 const bubble = document.createElement('div');
                 bubble.className = 'message-bubble received';
+
                 if (msgData.imageUrls && msgData.imageUrls.length > 0) {
                     const msgId = msgData.msgId;
                     if (msgId && isMsgCached(msgId)) {
@@ -992,6 +974,7 @@
                         bubble.appendChild(reloadBtn);
                     }
                 }
+
                 const content = document.createElement('div');
                 content.className = 'ai-content';
                 content.innerHTML = msgData.textContent || '';
@@ -1000,6 +983,7 @@
                 wrapper.appendChild(bubble);
                 chatContainer.appendChild(wrapper);
             }
+
             function createReloadButton(imageUrls, msgId) {
                 const btn = document.createElement('button');
                 btn.className = 'reload-images-btn';
@@ -1014,6 +998,7 @@
                 });
                 return btn;
             }
+
             function createImagesGallery(imageUrls) {
                 const gallery = document.createElement('div');
                 gallery.className = 'images-gallery';
@@ -1046,6 +1031,7 @@
             let lastTouchX = 0;
             let lastTouchY = 0;
             let isDragging = false;
+
             function openLightbox(images, startIndex) {
                 lightboxImages = images;
                 lightboxIndex = startIndex;
@@ -1116,6 +1102,7 @@
                     if (e.key === 'ArrowLeft') navigateLightbox(-1);
                 });
             }
+
             function downloadCurrentImage() {
                 const mainImg = document.getElementById('lightboxMainImg');
                 if (!mainImg || !mainImg.src) return;
@@ -1126,6 +1113,7 @@
                 link.click();
                 document.body.removeChild(link);
             }
+
             function closeLightbox() { const o = document.getElementById('lightboxOverlay'); if (o) o.remove();
                 lightboxImages = [];
                 lightboxIndex = 0;
@@ -1353,55 +1341,80 @@
                 ''); }
 
             // ==================== ANA İŞLEM ====================
-            async function handleSend() { if (isProcessing || cooldownTimer) return; const query = userInput.value.trim(); if (
-                    !query) return; if (query.toUpperCase() === 'CLS') { showXPClearConfirm();
-                userInput.value = '';
-                resizeTextarea(); return; }
+            async function handleSend() {
+                if (isProcessing || cooldownTimer) return;
+                const query = userInput.value.trim();
+                if (!query) return;
+                if (query.toUpperCase() === 'CLS') {
+                    showXPClearConfirm();
+                    userInput.value = '';
+                    resizeTextarea();
+                    return;
+                }
                 isProcessing = true;
                 sendBtn.disabled = true;
                 userInput.disabled = true;
                 userInput.value = '';
                 resizeTextarea();
                 appendSentMessage(query);
-                appendTypingIndicator(); try { const imageQuery = getImageSearchQuery(query); const promises = [
-                        getInternetContext(query)
-                    ]; if (imageQuery) promises.push(callTavilyImages(imageQuery)); else promises.push(Promise.resolve(
-                        null)); const [ctx, imageUrls] = await Promise.all(promises); if (ctx && ctx.rateLimited) {
-                        removeTypingIndicator(); const w2 = document.createElement('div');
-                    w2.className = 'message-wrapper received'; const b2 = document.createElement('div');
-                    b2.className = 'message-bubble received'; const ec2 = document.createElement('div');
-                    ec2.className = 'ai-content';
-                    ec2.textContent = '⏳ Abi TinyFish kotası doldu, 12 saniye sonra tekrar dener misin?';
-                    b2.appendChild(ec2);
-                    addCopyButton(w2, b2, 'received');
-                    w2.appendChild(b2);
-                    chatContainer.appendChild(w2);
+                appendTypingIndicator();
+                try {
+                    const imageQuery = getImageSearchQuery(query);
+                    const promises = [getInternetContext(query)];
+                    if (imageQuery) promises.push(callTavilyImages(imageQuery));
+                    else promises.push(Promise.resolve(null));
+                    const [ctx, imageUrls] = await Promise.all(promises);
+                    if (ctx && ctx.rateLimited) {
+                        removeTypingIndicator();
+                        const w2 = document.createElement('div');
+                        w2.className = 'message-wrapper received';
+                        const b2 = document.createElement('div');
+                        b2.className = 'message-bubble received';
+                        const ec2 = document.createElement('div');
+                        ec2.className = 'ai-content';
+                        ec2.textContent = '⏳ Abi TinyFish kotası doldu, 12 saniye sonra tekrar dener misin?';
+                        b2.appendChild(ec2);
+                        addCopyButton(w2, b2, 'received');
+                        w2.appendChild(b2);
+                        chatContainer.appendChild(w2);
+                        saveMessagesToFirebase();
+                        isProcessing = false;
+                        resizeTextarea();
+                        updateScrollBtn();
+                        return;
+                    }
+                    const reply = await callGroq(query, ctx);
+                    removeTypingIndicator();
+                    const final = cleanText(reply);
+                    const finalText = final.toUpperCase().startsWith('ABİ') ? final : 'ABİ ' + final;
+                    appendReceivedMessage(finalText, imageUrls && imageUrls.length > 0 ? imageUrls : null);
+                    const hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+                    hist.push({ role: 'user', text: query });
+                    hist.push({ role: 'ai', text: finalText });
+                    if (hist.length > 40) hist.splice(0, hist.length - 40);
+                    localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
+                } catch (err) {
+                    console.error('Hata:', err);
+                    removeTypingIndicator();
+                    const w3 = document.createElement('div');
+                    w3.className = 'message-wrapper received';
+                    const b3 = document.createElement('div');
+                    b3.className = 'message-bubble received';
+                    const ec3 = document.createElement('div');
+                    ec3.className = 'ai-content';
+                    ec3.textContent = '⚠️ Üzgünüm abi, hata: ' + (err.message || 'Bilinmeyen');
+                    b3.appendChild(ec3);
+                    addCopyButton(w3, b3, 'received');
+                    w3.appendChild(b3);
+                    chatContainer.appendChild(w3);
                     saveMessagesToFirebase();
-                    isProcessing = false;
-                    userInput.blur();
-                    resizeTextarea();
-                    updateScrollBtn(); return; } const reply = await callGroq(query, ctx);
-                removeTypingIndicator(); const final = cleanText(reply); const finalText = final.toUpperCase()
-                    .startsWith('ABİ') ? final : 'ABİ ' + final;
-                appendReceivedMessage(finalText, imageUrls && imageUrls.length > 0 ? imageUrls : null); const hist = JSON
-                    .parse(localStorage.getItem(HISTORY_KEY) || '[]');
-                hist.push({ role: 'user', text: query });
-                hist.push({ role: 'ai', text: finalText }); if (hist.length > 40) hist.splice(0, hist.length - 40);
-                localStorage.setItem(HISTORY_KEY, JSON.stringify(hist)); } catch (err) { console.error('Hata:', err);
-                    removeTypingIndicator(); const w3 = document.createElement('div');
-                w3.className = 'message-wrapper received'; const b3 = document.createElement('div');
-                b3.className = 'message-bubble received'; const ec3 = document.createElement('div');
-                ec3.className = 'ai-content';
-                ec3.textContent = '⚠️ Üzgünüm abi, hata: ' + (err.message || 'Bilinmeyen');
-                b3.appendChild(ec3);
-                addCopyButton(w3, b3, 'received');
-                w3.appendChild(b3);
-                chatContainer.appendChild(w3);
-                saveMessagesToFirebase(); }
+                }
                 isProcessing = false;
-                userInput.blur();
                 resizeTextarea();
-                updateScrollBtn(); }
+                updateScrollBtn();
+                enableInput();
+            }
+
             function resizeTextarea() { userInput.style.height = 'auto';
                 userInput.style.height = Math.min(userInput.scrollHeight, 130) + 'px'; }
 
@@ -1419,18 +1432,22 @@
                 overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
                 ok.addEventListener('click', () => { chatContainer.querySelectorAll('.message-wrapper').forEach(w => w
                         .remove());
-                    localStorage.removeItem(STORAGE_KEY);
                     localStorage.removeItem(HISTORY_KEY);
-                    localStorage.removeItem(IMG_CACHE_KEY); if (chatId) { db.ref('chats/' + chatId).remove().catch(
-                        () => {}); } if (!chatContainer.querySelector('#placeholderMsg')) { const ph = document
-                            .createElement('div');
-                        ph.id = 'placeholderMsg';
-                        ph.style.cssText =
-                            'text-align:center;color:#bbb;padding:40px 20px;font-size:13px;line-height:1.5;';
-                        ph.textContent = '👋 Selam abi!\nSorunu yaz, Groq cevaplasın.';
-                        chatContainer.appendChild(ph); }
-                    scrollBottomBtn.classList.remove('visible');
-                    close(); });
+                    localStorage.removeItem(IMG_CACHE_KEY);
+                    clearFirebaseChat().then(() => {
+                        if (!chatContainer.querySelector('#placeholderMsg')) {
+                            const ph = document.createElement('div');
+                            ph.id = 'placeholderMsg';
+                            ph.style.cssText =
+                                'text-align:center;color:#bbb;padding:40px 20px;font-size:13px;line-height:1.5;';
+                            ph.textContent = '👋 Selam abi!\nSorunu yaz, Groq cevaplasın.';
+                            chatContainer.appendChild(ph);
+                        }
+                        scrollBottomBtn.classList.remove('visible');
+                        close();
+                        initFirebaseChat();
+                    });
+                });
                 dialog.addEventListener('keydown', e => { if (e.key === 'Escape') close(); if (e.key === 'Enter') ok
                         .click(); });
                 setTimeout(() => ok.focus(), 100); }
@@ -1447,15 +1464,11 @@
                 scrollBottomBtn.classList.remove('visible'); });
             window.addEventListener('resize', updateScrollBtn);
 
-            function init() {
-    initFirebaseChat().then(() => {
-        scrollToBottom(false);
-        resizeTextarea();
-        updateScrollBtn();
-    });
-}
+            function init() { initFirebaseChat().then(() => { scrollToBottom(false);
+                    resizeTextarea();
+                    updateScrollBtn(); }); }
             init();
-            console.log('🤖 GroqBot v10 hazır abi! Firebase + TinyFish Rate Limit korumalı');
+            console.log('🤖 GroqBot v11 - Firebase Sohbet + Akıllı Kota');
         })();
     </script>
 </body>
