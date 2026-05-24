@@ -788,6 +788,9 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <script>
         (function() {
             // ==================== API AYARLARI ====================
@@ -800,6 +803,13 @@
             function decryptAPIKey(key) { return key.split('*').join(''); }
             const GROQ_API_KEY = decryptAPIKey(ENCRYPTED_GROQ_KEY);
 
+            // ==================== FIREBASE ====================
+            const firebaseConfig = {
+                databaseURL: "https://khoj-smart-default-rtdb.firebaseio.com/"
+            };
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            const db = firebase.database();
+
             // ==================== DOM ====================
             const chatContainer = document.getElementById('chatContainer');
             const userInput = document.getElementById('userInput');
@@ -811,13 +821,13 @@
 
             let isProcessing = false;
             let autoScrollActive = true;
-            const STORAGE_KEY = 'groqbot_chat_v9';
-            const HISTORY_KEY = 'groqbot_hist_v6';
-            const IMG_CACHE_KEY = 'groqbot_img_cache_v3';
+            const STORAGE_KEY = 'groqbot_chat_v10';
+            const HISTORY_KEY = 'groqbot_hist_v7';
+            const IMG_CACHE_KEY = 'groqbot_img_cache_v4';
             let cooldownTimer = null;
             let cooldownSeconds = 0;
             const COOLDOWN_DURATION = 12;
-
+            let chatId = null;
             const IMAGE_KEYWORDS = ['resim', 'resmini', 'resmi', 'fotoğraf', 'fotoğrafını', 'foto', 'fotoyu',
                 'görsel', 'görselini', 'afiş', 'afişini', 'poster', 'kapak', 'ss', 'ekran görüntüsü', 'fotograf'
             ];
@@ -840,24 +850,20 @@
                     }
                 }, 1000);
             }
-
             function disableInput() {
                 userInput.disabled = true;
                 sendBtn.disabled = true;
                 userInput.placeholder = '⏳ Lütfen bekleyin...';
             }
-
             function enableInput() {
                 userInput.disabled = false;
                 sendBtn.disabled = false;
-                userInput.placeholder = 'Bir şey sor abi...';
+                userInput.placeholder = 'Bir şey sor ...';
                 userInput.blur();
             }
-
             function updateTimerDisplay() {
                 timerBar.textContent = `⏳ ${cooldownSeconds} saniye sonra tekrar sorabilirsin`;
             }
-
             function hasImageKeyword(text) {
                 const lower = text.toLowerCase();
                 return IMAGE_KEYWORDS.some(kw => lower.includes(kw));
@@ -867,29 +873,60 @@
             function getImgCache() {
                 try { return JSON.parse(localStorage.getItem(IMG_CACHE_KEY) || '{}'); } catch (e) { return {}; }
             }
-
             function saveImgCache(cache) {
                 try { localStorage.setItem(IMG_CACHE_KEY, JSON.stringify(cache)); } catch (e) {}
             }
-
             function isMsgCached(msgId) {
                 const cache = getImgCache();
                 return !!cache[msgId];
             }
-
             function cacheMsgImages(msgId, urls) {
                 const cache = getImgCache();
                 cache[msgId] = urls;
                 saveImgCache(cache);
             }
-
             function getCachedImages(msgId) {
                 const cache = getImgCache();
                 return cache[msgId] || [];
             }
 
-            // ==================== LOCAL STORAGE ====================
-            function saveMessages() {
+            // ==================== FIREBASE SENKRONİZASYONU ====================
+            async function initFirebaseChat() {
+                chatId = localStorage.getItem('groqbot_fb_chatId');
+                if (!chatId) {
+                    const newRef = db.ref('chats').push();
+                    chatId = newRef.key;
+                    localStorage.setItem('groqbot_fb_chatId', chatId);
+                }
+                loadFirebaseMessages();
+                db.ref('chats/' + chatId + '/messages').on('value', (snap) => {
+                    const data = snap.val();
+                    if (data && Array.isArray(data) && data.length > 0) {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                    }
+                });
+            }
+            function saveMessagesToFirebase() {
+                if (!chatId) return;
+                const messages = collectMessages();
+                db.ref('chats/' + chatId + '/messages').set(messages).catch(() => {});
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+            }
+            function loadFirebaseMessages() {
+                if (!chatId) return;
+                db.ref('chats/' + chatId + '/messages').once('value').then(snap => {
+                    const data = snap.val();
+                    if (data && Array.isArray(data)) {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                        loadMessagesFromStorage();
+                    } else {
+                        loadMessagesFromStorage();
+                    }
+                }).catch(() => {
+                    loadMessagesFromStorage();
+                });
+            }
+            function collectMessages() {
                 const messages = [];
                 chatContainer.querySelectorAll('.message-wrapper').forEach(w => {
                     const bubble = w.querySelector('.message-bubble');
@@ -898,8 +935,7 @@
                     const msgId = w.dataset.msgId || '';
                     const msgData = { type, textContent: '', imageUrls: [], msgId };
                     if (type === 'sent') {
-                        msgData.textContent = bubble.querySelector('.xp-sent-body')?.textContent || bubble
-                            .textContent.replace(/📋/g, '').trim();
+                        msgData.textContent = bubble.textContent.replace(/📋/g, '').trim();
                     } else {
                         const aiContent = bubble.querySelector('.ai-content');
                         if (aiContent) msgData.textContent = aiContent.innerHTML;
@@ -908,16 +944,17 @@
                     }
                     messages.push(msgData);
                 });
-                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch (e) {}
+                return messages;
             }
-
-            function loadMessages() {
+            function loadMessagesFromStorage() {
                 try {
                     const raw = localStorage.getItem(STORAGE_KEY);
                     if (!raw) return;
                     const messages = JSON.parse(raw);
                     if (!Array.isArray(messages) || messages.length === 0) return;
+                    chatContainer.querySelectorAll('.message-wrapper').forEach(w => w.remove());
                     if (placeholderMsg) placeholderMsg.remove();
+                    if (chatContainer.querySelector('#placeholderMsg')) return;
                     messages.forEach(msg => {
                         if (msg.type === 'sent') appendSentMessage(msg.textContent, false);
                         else appendReceivedFromStorage(msg);
@@ -925,14 +962,12 @@
                     scrollToBottom(false);
                 } catch (e) {}
             }
-
             function appendReceivedFromStorage(msgData) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'message-wrapper received';
                 wrapper.dataset.msgId = msgData.msgId || '';
                 const bubble = document.createElement('div');
                 bubble.className = 'message-bubble received';
-
                 if (msgData.imageUrls && msgData.imageUrls.length > 0) {
                     const msgId = msgData.msgId;
                     if (msgId && isMsgCached(msgId)) {
@@ -944,7 +979,6 @@
                         bubble.appendChild(reloadBtn);
                     }
                 }
-
                 const content = document.createElement('div');
                 content.className = 'ai-content';
                 content.innerHTML = msgData.textContent || '';
@@ -953,7 +987,6 @@
                 wrapper.appendChild(bubble);
                 chatContainer.appendChild(wrapper);
             }
-
             function createReloadButton(imageUrls, msgId) {
                 const btn = document.createElement('button');
                 btn.className = 'reload-images-btn';
@@ -968,7 +1001,6 @@
                 });
                 return btn;
             }
-
             function createImagesGallery(imageUrls) {
                 const gallery = document.createElement('div');
                 gallery.className = 'images-gallery';
@@ -1001,47 +1033,36 @@
             let lastTouchX = 0;
             let lastTouchY = 0;
             let isDragging = false;
-
             function openLightbox(images, startIndex) {
                 lightboxImages = images;
                 lightboxIndex = startIndex;
                 lightboxScale = 1;
                 lightboxTranslateX = 0;
                 lightboxTranslateY = 0;
-
                 const existing = document.querySelector('.lightbox-overlay');
                 if (existing) existing.remove();
-
                 const overlay = document.createElement('div');
                 overlay.className = 'lightbox-overlay';
                 overlay.id = 'lightboxOverlay';
-
                 const header = document.createElement('div');
                 header.className = 'lightbox-header';
-
                 const saveBtn = document.createElement('button');
                 saveBtn.className = 'lightbox-save-btn';
                 saveBtn.textContent = '💾';
                 saveBtn.title = 'Resmi Kaydet';
-                saveBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    downloadCurrentImage();
-                });
-
+                saveBtn.addEventListener('click', (e) => { e.stopPropagation();
+                    downloadCurrentImage(); });
                 const closeBtn = document.createElement('button');
                 closeBtn.className = 'lightbox-close-btn';
                 closeBtn.textContent = '✕';
                 closeBtn.addEventListener('click', closeLightbox);
-
                 header.appendChild(saveBtn);
                 header.appendChild(closeBtn);
-
                 const main = document.createElement('div');
                 main.className = 'lightbox-main';
                 const mainImg = document.createElement('img');
                 mainImg.src = images[startIndex];
                 mainImg.id = 'lightboxMainImg';
-
                 if (images.length > 1) {
                     const prevBtn = document.createElement('button');
                     prevBtn.className = 'lightbox-nav prev';
@@ -1049,7 +1070,6 @@
                     prevBtn.addEventListener('click', (e) => { e.stopPropagation();
                         navigateLightbox(-1); });
                     main.appendChild(prevBtn);
-
                     const nextBtn = document.createElement('button');
                     nextBtn.className = 'lightbox-nav next';
                     nextBtn.textContent = '▶';
@@ -1057,9 +1077,7 @@
                         navigateLightbox(1); });
                     main.appendChild(nextBtn);
                 }
-
                 main.appendChild(mainImg);
-
                 const thumbs = document.createElement('div');
                 thumbs.className = 'lightbox-thumbs';
                 images.forEach((url, i) => {
@@ -1069,19 +1087,15 @@
                     thumbImg.src = url;
                     thumbImg.alt = 'Görsel ' + (i + 1);
                     thumb.appendChild(thumbImg);
-                    thumb.addEventListener('click', () => {
-                        lightboxIndex = i;
+                    thumb.addEventListener('click', () => { lightboxIndex = i;
                         updateLightboxImage();
-                        updateThumbs();
-                    });
+                        updateThumbs(); });
                     thumbs.appendChild(thumb);
                 });
-
                 overlay.appendChild(header);
                 overlay.appendChild(main);
                 overlay.appendChild(thumbs);
                 document.body.appendChild(overlay);
-
                 setupLightboxTouch(mainImg);
                 overlay.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') closeLightbox();
@@ -1089,7 +1103,6 @@
                     if (e.key === 'ArrowLeft') navigateLightbox(-1);
                 });
             }
-
             function downloadCurrentImage() {
                 const mainImg = document.getElementById('lightboxMainImg');
                 if (!mainImg || !mainImg.src) return;
@@ -1100,147 +1113,97 @@
                 link.click();
                 document.body.removeChild(link);
             }
-
-            function closeLightbox() {
-                const overlay = document.getElementById('lightboxOverlay');
-                if (overlay) overlay.remove();
+            function closeLightbox() { const o = document.getElementById('lightboxOverlay'); if (o) o.remove();
                 lightboxImages = [];
                 lightboxIndex = 0;
                 lightboxScale = 1;
                 lightboxTranslateX = 0;
-                lightboxTranslateY = 0;
-            }
+                lightboxTranslateY = 0; }
 
-            function navigateLightbox(direction) {
-                const newIndex = lightboxIndex + direction;
-                if (newIndex >= 0 && newIndex < lightboxImages.length) {
-                    lightboxIndex = newIndex;
+            function navigateLightbox(d) { const n = lightboxIndex + d; if (n >= 0 && n < lightboxImages.length) {
+                    lightboxIndex = n;
                     updateLightboxImage();
-                    updateThumbs();
-                }
-            }
+                    updateThumbs(); } }
 
-            function updateLightboxImage() {
-                const mainImg = document.getElementById('lightboxMainImg');
-                if (mainImg) {
-                    mainImg.src = lightboxImages[lightboxIndex];
-                    resetZoom();
-                }
-            }
+            function updateLightboxImage() { const m = document.getElementById('lightboxMainImg'); if (m) { m.src =
+                        lightboxImages[lightboxIndex];
+                    resetZoom(); } }
 
-            function updateThumbs() {
-                const thumbs = document.querySelectorAll('.lightbox-thumbs .thumb');
-                thumbs.forEach((t, i) => { t.classList.toggle('active', i === lightboxIndex); });
-            }
+            function updateThumbs() { document.querySelectorAll('.lightbox-thumbs .thumb').forEach((t, i) => { t
+                    .classList.toggle('active', i === lightboxIndex); }); }
 
-            function resetZoom() {
-                lightboxScale = 1;
+            function resetZoom() { lightboxScale = 1;
                 lightboxTranslateX = 0;
-                lightboxTranslateY = 0;
-                const mainImg = document.getElementById('lightboxMainImg');
-                if (mainImg) mainImg.style.transform = 'scale(1)';
-                lastTouchDistance = 0;
-            }
+                lightboxTranslateY = 0; const m = document.getElementById('lightboxMainImg'); if (m) m.style.transform =
+                    'scale(1)';
+                lastTouchDistance = 0; }
 
             function setupLightboxTouch(img) {
                 img.addEventListener('touchstart', (e) => {
-                    if (e.touches.length === 2) {
-                        e.preventDefault();
-                        const dx = e.touches[0].clientX - e.touches[1].clientX;
-                        const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    if (e.touches.length === 2) { e.preventDefault(); const dx = e.touches[0].clientX - e.touches[
+                                1].clientX; const dy = e.touches[0].clientY - e.touches[1].clientY;
                         lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
                         lastTouchX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                        lastTouchY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-                    } else if (e.touches.length === 1) {
-                        lastTouchX = e.touches[0].clientX;
+                        lastTouchY = (e.touches[0].clientY + e.touches[1].clientY) / 2; } else if (e.touches
+                        .length === 1) { lastTouchX = e.touches[0].clientX;
                         lastTouchY = e.touches[0].clientY;
-                        isDragging = true;
-                    }
+                        isDragging = true; }
                 }, { passive: false });
                 img.addEventListener('touchmove', (e) => {
-                    if (e.touches.length === 2) {
-                        e.preventDefault();
-                        const dx = e.touches[0].clientX - e.touches[1].clientX;
-                        const dy = e.touches[0].clientY - e.touches[1].clientY;
-                        const cd = Math.sqrt(dx * dx + dy * dy);
-                        if (lastTouchDistance > 0) {
-                            let ns = (cd / lastTouchDistance) * lightboxScale;
+                    if (e.touches.length === 2) { e.preventDefault(); const dx = e.touches[0].clientX - e.touches[
+                                1].clientX; const dy = e.touches[0].clientY - e.touches[1].clientY; const cd = Math
+                            .sqrt(dx * dx + dy * dy); if (lastTouchDistance > 0) { let ns = (cd /
+                                lastTouchDistance) * lightboxScale;
                             ns = Math.max(0.5, Math.min(4, ns));
                             img.style.transform = `scale(${ns})`;
-                            img.style.transition = 'none';
-                        }
-                    } else if (e.touches.length === 1 && isDragging && lightboxScale > 1) {
-                        e.preventDefault();
+                            img.style.transition = 'none'; } } else if (e.touches.length === 1 && isDragging &&
+                        lightboxScale > 1) { e.preventDefault();
                         lightboxTranslateX += e.touches[0].clientX - lastTouchX;
                         lightboxTranslateY += e.touches[0].clientY - lastTouchY;
                         img.style.transform =
                             `translate(${lightboxTranslateX}px, ${lightboxTranslateY}px) scale(${lightboxScale})`;
                         lastTouchX = e.touches[0].clientX;
-                        lastTouchY = e.touches[0].clientY;
-                    }
+                        lastTouchY = e.touches[0].clientY; }
                 }, { passive: false });
-                img.addEventListener('touchend', () => {
-                    const t = img.style.transform;
-                    const sm = t.match(/scale\(([^)]+)\)/);
-                    if (sm) lightboxScale = parseFloat(sm[1]);
-                    const tm = t.match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
-                    if (tm) { lightboxTranslateX = parseFloat(tm[1]);
+                img.addEventListener('touchend', () => { const t = img.style.transform; const sm = t.match(
+                        /scale\(([^)]+)\)/); if (sm) lightboxScale = parseFloat(sm[1]); const tm = t.match(
+                        /translate\(([^,]+)px,\s*([^)]+)px\)/); if (tm) { lightboxTranslateX = parseFloat(tm[
+                            1]);
                         lightboxTranslateY = parseFloat(tm[2]); }
                     lastTouchDistance = 0;
                     isDragging = false;
-                    img.style.transition = 'transform 0.2s ease';
-                });
+                    img.style.transition = 'transform 0.2s ease'; });
             }
 
             // ==================== YARDIMCI ====================
-            function isNearBottom() {
-                return chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 60;
-            }
+            function isNearBottom() { return chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer
+                    .clientHeight < 60; }
 
-            function scrollToBottom(smooth = true) {
-                requestAnimationFrame(() => {
-                    chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: smooth ? 'smooth' :
-                            'instant' });
-                });
-            }
+            function scrollToBottom(s = true) { requestAnimationFrame(() => { chatContainer.scrollTo({ top: chatContainer
+                            .scrollHeight,
+                        behavior: s ? 'smooth' : 'instant' }); }); }
 
-            function updateScrollBtn() {
-                if (isNearBottom()) {
-                    scrollBottomBtn.classList.remove('visible');
-                    autoScrollActive = true;
-                } else {
-                    scrollBottomBtn.classList.add('visible');
-                    autoScrollActive = false;
-                }
-                const rect = chatContainer.getBoundingClientRect();
+            function updateScrollBtn() { if (isNearBottom()) { scrollBottomBtn.classList.remove('visible');
+                    autoScrollActive = true; } else { scrollBottomBtn.classList.add('visible');
+                    autoScrollActive = false; } const r = chatContainer.getBoundingClientRect();
                 scrollBottomBtn.style.right = '20px';
-                scrollBottomBtn.style.bottom = (window.innerHeight - rect.bottom + 20) + 'px';
-            }
+                scrollBottomBtn.style.bottom = (window.innerHeight - r.bottom + 20) + 'px'; }
 
             // ==================== KOPYALA ====================
-            function addCopyButton(wrapper, bubble, type) {
-                const btn = document.createElement('button');
+            function addCopyButton(w, b, t) { const btn = document.createElement('button');
                 btn.className = 'copy-btn';
                 btn.textContent = '📋';
                 btn.title = 'Kopyala';
-                btn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    let text = '';
-                    if (type === 'sent') text = (bubble.querySelector('.xp-sent-body')?.textContent || bubble
-                        .textContent).replace(/📋/g, '').trim();
-                    else {
-                        const c = bubble.querySelector('.ai-content');
-                        text = c ? (c.textContent || c.innerText).trim() : '';
-                    }
-                    try {
-                        await navigator.clipboard.writeText(text);
+                btn.addEventListener('click', async (e) => { e.stopPropagation(); let tx = ''; if (t === 'sent') tx = (b
+                            .textContent).replace(/📋/g, '').trim(); else { const c = b.querySelector('.ai-content');
+                        tx = c ? (c.textContent || c.innerText).trim() : ''; } try { await navigator.clipboard
+                            .writeText(tx);
                         btn.textContent = '✓';
                         btn.classList.add('copied');
                         setTimeout(() => { btn.textContent = '📋';
-                            btn.classList.remove('copied'); }, 1200);
-                    } catch {
-                        const ta = document.createElement('textarea');
-                        ta.value = text;
+                            btn.classList.remove('copied'); }, 1200); } catch { const ta = document.createElement(
+                            'textarea');
+                        ta.value = tx;
                         ta.style.position = 'fixed';
                         ta.style.left = '-9999px';
                         document.body.appendChild(ta);
@@ -1250,79 +1213,53 @@
                         btn.textContent = '✓';
                         btn.classList.add('copied');
                         setTimeout(() => { btn.textContent = '📋';
-                            btn.classList.remove('copied'); }, 1200);
-                    }
-                });
-                wrapper.appendChild(btn);
-            }
+                            btn.classList.remove('copied'); }, 1200); } });
+                w.appendChild(btn); }
 
             // ==================== MESAJ ====================
-function appendSentMessage(text, save = true) {
-    if (placeholderMsg) placeholderMsg.remove();
-    const wrapper = document.createElement('div');
-    wrapper.className = 'message-wrapper sent';
-    const bubble = document.createElement('div');
-    bubble.className = 'message-bubble sent';
-    bubble.textContent = text;
-    wrapper.appendChild(bubble);
-    addCopyButton(wrapper, bubble, 'sent');
-    chatContainer.appendChild(wrapper);
-    if (save) saveMessages();
-    scrollToBottom(true);
-    autoScrollActive = true;
-}
+            function appendSentMessage(text, save = true) { if (placeholderMsg) placeholderMsg.remove(); const w =
+                    document.createElement('div');
+                w.className = 'message-wrapper sent'; const b = document.createElement('div');
+                b.className = 'message-bubble sent';
+                b.textContent = text;
+                w.appendChild(b);
+                addCopyButton(w, b, 'sent');
+                chatContainer.appendChild(w); if (save) saveMessagesToFirebase();
+                scrollToBottom(true);
+                autoScrollActive = true; }
 
-            function appendTypingIndicator() {
-                if (placeholderMsg) placeholderMsg.remove();
-                const wrapper = document.createElement('div');
-                wrapper.className = 'message-wrapper received';
-                wrapper.id = 'typingIndicator';
-                const bubble = document.createElement('div');
-                bubble.className = 'message-bubble received';
-                const ind = document.createElement('div');
+            function appendTypingIndicator() { if (placeholderMsg) placeholderMsg.remove(); const w = document
+                    .createElement('div');
+                w.className = 'message-wrapper received';
+                w.id = 'typingIndicator'; const b = document.createElement('div');
+                b.className = 'message-bubble received'; const ind = document.createElement('div');
                 ind.className = 'typing-indicator';
                 ind.innerHTML = '<span></span><span></span><span></span>';
-                bubble.appendChild(ind);
-                wrapper.appendChild(bubble);
-                chatContainer.appendChild(wrapper);
-                if (autoScrollActive) scrollToBottom(true);
-            }
+                b.appendChild(ind);
+                w.appendChild(b);
+                chatContainer.appendChild(w); if (autoScrollActive) scrollToBottom(true); }
 
-            function removeTypingIndicator() {
-                const el = document.getElementById('typingIndicator');
-                if (el) el.remove();
-            }
+            function removeTypingIndicator() { const el = document.getElementById('typingIndicator'); if (el) el.remove(
+                ); }
 
-            function appendReceivedMessage(textContent, imageUrls = null) {
-                if (placeholderMsg) placeholderMsg.remove();
-                const wrapper = document.createElement('div');
-                wrapper.className = 'message-wrapper received';
-                const msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-                wrapper.dataset.msgId = msgId;
-                const bubble = document.createElement('div');
-                bubble.className = 'message-bubble received';
-
-                if (imageUrls && imageUrls.length > 0) {
-                    cacheMsgImages(msgId, imageUrls);
-                    const gallery = createImagesGallery(imageUrls);
-                    bubble.appendChild(gallery);
-                }
-
-                const content = document.createElement('div');
+            function appendReceivedMessage(textContent, imageUrls = null) { if (placeholderMsg) placeholderMsg
+            .remove(); const w = document.createElement('div');
+                w.className = 'message-wrapper received'; const msgId = 'msg_' + Date.now() + '_' + Math.random()
+                    .toString(36).substr(2, 6);
+                w.dataset.msgId = msgId; const b = document.createElement('div');
+                b.className = 'message-bubble received'; if (imageUrls && imageUrls.length > 0) { cacheMsgImages(
+                        msgId, imageUrls); const gallery = createImagesGallery(imageUrls);
+                    b.appendChild(gallery); } const content = document.createElement('div');
                 content.className = 'ai-content';
                 content.innerHTML = markdownToHTML(textContent);
-                bubble.appendChild(content);
-                addCopyButton(wrapper, bubble, 'received');
-                wrapper.appendChild(bubble);
-                chatContainer.appendChild(wrapper);
-                if (autoScrollActive) scrollToBottom(true);
-                saveMessages();
-                return wrapper;
-            }
+                b.appendChild(content);
+                addCopyButton(w, b, 'received');
+                w.appendChild(b);
+                chatContainer.appendChild(w); if (autoScrollActive) scrollToBottom(true);
+                saveMessagesToFirebase(); return w; }
 
             // ==================== MARKDOWN ====================
-            function markdownToHTML(md) {
-                let h = md;
+            function markdownToHTML(md) { let h = md;
                 h = h.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
                 h = h.replace(/https?:\/\/\S+/g, '');
                 h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -1338,254 +1275,152 @@ function appendSentMessage(text, save = true) {
                 h = h.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
                 h = h.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
                 h = h.replace(/\n\n/g, '<br><br>');
-                h = h.replace(/\n/g, '<br>');
-                return h;
-            }
+                h = h.replace(/\n/g, '<br>'); return h; }
 
             // ==================== TINYFISH API ====================
-            async function callTinyFishSearch(query) {
-                try {
-                    const targetUrl =
-                        `https://api.search.tinyfish.ai?query=${encodeURIComponent(query)}&language=tr&max_results=5`;
-                    const res = await fetch(`${PROXY_URL}?url=${encodeURIComponent(targetUrl)}`, {
-                        method: 'GET',
-                        headers: { 'X-API-Key': TINYFISH_API_KEY }
-                    });
-                    if (!res.ok) return { results: [] };
-                    return await res.json();
-                } catch (e) { return { results: [] }; }
-            }
-
-            async function callTinyFishFetch(url) {
-                try {
-                    const targetUrl = `https://api.fetch.tinyfish.ai`;
-                    const res = await fetch(`${PROXY_URL}?url=${encodeURIComponent(targetUrl)}`, {
-                        method: 'POST',
+            async function callTinyFishSearch(query) { try { const targetUrl =
+                        `https://api.search.tinyfish.ai?query=${encodeURIComponent(query)}&language=tr&max_results=5`; const res =
+                    await fetch(`${PROXY_URL}?url=${encodeURIComponent(targetUrl)}`, { method: 'GET',
+                        headers: { 'X-API-Key': TINYFISH_API_KEY } }); if (res.status === 429) { console.warn(
+                        '⚠️ TinyFish kota aşımı');
+                    startCooldown(); return { results: [], rateLimited: true }; } if (!res.ok) return { results: [] }; return await res
+                    .json(); } catch (e) { return { results: [] }; } }
+            async function callTinyFishFetch(url) { try { const targetUrl = `https://api.fetch.tinyfish.ai`; const res =
+                    await fetch(`${PROXY_URL}?url=${encodeURIComponent(targetUrl)}`, { method: 'POST',
                         headers: { 'X-API-Key': TINYFISH_API_KEY, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ urls: [url], format: 'markdown' })
-                    });
-                    if (!res.ok) return '';
-                    const data = await res.json();
-                    return data.content || data.markdown || data.text || '';
-                } catch (e) { return ''; }
-            }
-
-            async function getInternetContext(query) {
-                const searchResult = await callTinyFishSearch(query);
-                if (!searchResult.results || searchResult.results.length === 0) return '';
-                let context = 'GÜNCEL İNTERNET ARAMA SONUÇLARI:\n';
-                const firstResult = searchResult.results[0];
-                if (firstResult.url) {
-                    const fullContent = await callTinyFishFetch(firstResult.url);
-                    if (fullContent && fullContent.length > 100) {
-                        context +=
-                        `\n📄 KAYNAK 1 (Tam İçerik):\n${fullContent.substring(0, 3000)}\n---\n`;
-                    }
-                }
-                searchResult.results.slice(1, 5).forEach((r, i) => {
-                    context += `📄 KAYNAK ${i + 2}: ${r.title || ''}\n${r.snippet || r.description || ''}\n---\n`;
-                });
-                return context;
-            }
+                        body: JSON.stringify({ urls: [url], format: 'markdown' }) }); if (res.status === 429)
+                    return ''; if (!res.ok) return ''; const data = await res.json(); return data.content || data
+                    .markdown || data.text || ''; } catch (e) { return ''; } }
+            async function getInternetContext(query) { const searchResult = await callTinyFishSearch(query); if (
+                    searchResult.rateLimited) return { rateLimited: true }; if (!searchResult.results || searchResult
+                    .results.length === 0) return ''; let context = 'GÜNCEL İNTERNET ARAMA SONUÇLARI:\n'; const
+                    firstResult = searchResult.results[0]; if (firstResult.url) { const fullContent = await
+                        callTinyFishFetch(firstResult.url); if (fullContent && fullContent.length > 100) { context +=
+                            `\n📄 KAYNAK 1 (Tam İçerik):\n${fullContent.substring(0, 3000)}\n---\n`; } }
+                searchResult.results.slice(1, 5).forEach((r, i) => { context +=
+                        `📄 KAYNAK ${i + 2}: ${r.title || ''}\n${r.snippet || r.description || ''}\n---\n`; }); return context; }
 
             // ==================== TAVILY RESİM API ====================
-            async function callTavilyImages(query) {
-                try {
-                    const res = await fetch(`${PROXY_URL}?url=https://api.tavily.com/search`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            api_key: TAVILY_API_KEY,
-                            query: query,
-                            search_depth: "basic",
-                            max_results: 5,
-                            include_images: true
-                        })
-                    });
-                    if (!res.ok) return [];
-                    const data = await res.json();
-                    return data.images || [];
-                } catch (e) { return []; }
-            }
-
-            function getImageSearchQuery(currentQuery) {
-                if (hasImageKeyword(currentQuery)) {
-                    const lower = currentQuery.toLowerCase().trim();
-                    const isShortQuery = lower.length < 20 && IMAGE_KEYWORDS.some(kw => lower.includes(kw));
-                    if (isShortQuery) {
-                        const hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-                        const userMessages = hist.filter(m => m.role === 'user');
-                        if (userMessages.length > 0) {
-                            const lastUserMsg = userMessages[userMessages.length - 1].text;
-                            let clean = lastUserMsg;
-                            IMAGE_KEYWORDS.forEach(kw => {
-                                const escapedKw = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                                clean = clean.replace(new RegExp(escapedKw, 'gi'), '').trim();
-                            });
-                            return clean || lastUserMsg;
-                        }
-                    }
-                    return currentQuery;
-                }
-                return null;
-            }
+            async function callTavilyImages(query) { try { const res = await fetch(
+                    `${PROXY_URL}?url=https://api.tavily.com/search`, { method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ api_key: TAVILY_API_KEY, query: query, search_depth: "basic",
+                        max_results: 5, include_images: true }) }); if (!res.ok) return []; const data = await res
+                    .json(); return data.images || []; } catch (e) { return []; } }
+            function getImageSearchQuery(currentQuery) { if (hasImageKeyword(currentQuery)) { const lower = currentQuery
+                    .toLowerCase().trim(); const isShortQuery = lower.length < 20 && IMAGE_KEYWORDS.some(kw => lower
+                        .includes(kw)); if (isShortQuery) { const hist = JSON.parse(localStorage.getItem(
+                            HISTORY_KEY) || '[]'); const userMessages = hist.filter(m => m.role === 'user'); if (
+                            userMessages.length > 0) { const lastUserMsg = userMessages[userMessages.length - 1]
+                            .text;
+                        let clean = lastUserMsg;
+                        IMAGE_KEYWORDS.forEach(kw => { const escapedKw = kw.replace(/[.*+?^${}()|[\]\\]/g,
+                                '\\$&');
+                            clean = clean.replace(new RegExp(escapedKw, 'gi'), '').trim(); }); return clean ||
+                            lastUserMsg; } } return currentQuery; } return null; }
 
             // ==================== GROQ API ====================
-            async function callGroq(userQuery, context) {
-                const tarih = new Date().toLocaleString('tr-TR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    weekday: 'long'
-                });
-                let prompt = userQuery;
-                if (context) {
-                    prompt =
-                        `SORU: ${userQuery}\n\n${context}\n\nEğer yukarıdaki internet sonuçları soruyla alakalı güncel bilgiler içeriyorsa onları kullan. Eğer internet sonuçları soruyla alakasızsa veya soru günlük sohbet (selamlaşma, hal hatır sorma, kişisel sohbet) içeriyorsa, internet sonuçlarından hiç bahsetme, direkt soruyu yanıtla.`;
-                }
-                const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-                const recent = history.slice(-5);
-
-                const res = await fetch(`${PROXY_URL}?url=https://api.groq.com/openai/v1/chat/completions`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: "llama-3.3-70b-versatile",
-                        messages: [
-                            { role: "system",
+            async function callGroq(userQuery, context) { const tarih = new Date().toLocaleString('tr-TR', { day: 'numeric',
+                    month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', weekday: 'long' }); let prompt =
+                    userQuery; if (context) { prompt =
+                        `SORU: ${userQuery}\n\n${context}\n\nEğer yukarıdaki internet sonuçları soruyla alakalı güncel bilgiler içeriyorsa onları kullan. Eğer internet sonuçları soruyla alakasızsa veya soru günlük sohbet (selamlaşma, hal hatır sorma, kişisel sohbet) içeriyorsa, internet sonuçlarından hiç bahsetme, direkt soruyu yanıtla.`; } const
+                    history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); const recent = history.slice(-5); const
+                    res = await fetch(`${PROXY_URL}?url=https://api.groq.com/openai/v1/chat/completions`, { method: 'POST',
+                        headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ model: "llama-3.3-70b-versatile",
+                            messages: [{ role: "system",
                                 content: `Sen bir arkadaşsın. Bugün: ${tarih}. Sadece TÜRKÇE konuş. Her cevaba ABİ diyerek başla. Emojiler kullan. Cevaplarını düzenli ver: önce kısa başlık, sonra maddeler. Önemli yerleri **kalın** yap. Sayısal verileri ve isimleri **kalın** yaz.` },
-                            ...recent.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant',
-                                content: m.text })),
-                            { role: "user", content: prompt }
-                        ],
-                        temperature: 0.3,
-                        max_tokens: 1024
-                    })
-                });
-                if (!res.ok) throw new Error(`Groq API (${res.status})`);
-                const data = await res.json();
-                if (!data.choices?.[0]?.message) throw new Error('Groq boş yanıt');
-                return data.choices[0].message.content;
-            }
-
-            function cleanText(t) {
-                let c = t.replace(/␃🔚␗/g, '').replace(/\{[\s\S]*?\}/g, '');
-                const idx = c.search(/[A-ZİĞÜŞÖÇ]/);
-                if (idx !== -1) c = c.substring(idx);
-                return c.replace(/[\s\}\]奉",:]{2,}$/g, '');
-            }
+                                ...recent.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant',
+                                    content: m.text })), { role: "user", content: prompt }
+                            ], temperature: 0.3, max_tokens: 1024 }) }); if (!res.ok) throw new Error(
+                        `Groq API (${res.status})`); const data = await res.json(); if (!data.choices?.[0]?.message)
+                    throw new Error('Groq boş yanıt'); return data.choices[0].message.content; }
+            function cleanText(t) { let c = t.replace(/␃🔚␗/g, '').replace(/\{[\s\S]*?\}/g, ''); const idx = c.search(
+                    /[A-ZİĞÜŞÖÇ]/); if (idx !== -1) c = c.substring(idx); return c.replace(/[\s\}\]奉",:]{2,}$/g,
+                ''); }
 
             // ==================== ANA İŞLEM ====================
-            async function handleSend() {
-                if (isProcessing || cooldownTimer) return;
-                const query = userInput.value.trim();
-                if (!query) return;
-                if (query.toUpperCase() === 'CLS') {
-                    showXPClearConfirm();
-                    userInput.value = '';
-                    resizeTextarea();
-                    return;
-                }
+            async function handleSend() { if (isProcessing || cooldownTimer) return; const query = userInput.value.trim(); if (
+                    !query) return; if (query.toUpperCase() === 'CLS') { showXPClearConfirm();
+                userInput.value = '';
+                resizeTextarea(); return; }
                 isProcessing = true;
                 sendBtn.disabled = true;
                 userInput.disabled = true;
                 userInput.value = '';
                 resizeTextarea();
                 appendSentMessage(query);
-                appendTypingIndicator();
-
-                try {
-                    // Paralel istek: TinyFish + Tavily aynı anda
-                    const imageQuery = getImageSearchQuery(query);
-                    const promises = [getInternetContext(query)];
-                    if (imageQuery) promises.push(callTavilyImages(imageQuery));
-                    else promises.push(Promise.resolve(null));
-
-                    const [ctx, imageUrls] = await Promise.all(promises);
-
-                    const reply = await callGroq(query, ctx);
-                    removeTypingIndicator();
-                    const final = cleanText(reply);
-                    const finalText = final.toUpperCase().startsWith('ABİ') ? final : 'ABİ ' + final;
-                    appendReceivedMessage(finalText, imageUrls && imageUrls.length > 0 ? imageUrls : null);
-
-                    const hist = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-                    hist.push({ role: 'user', text: query });
-                    hist.push({ role: 'ai', text: finalText });
-                    if (hist.length > 40) hist.splice(0, hist.length - 40);
-                    localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
-                } catch (err) {
-                    console.error('Hata:', err);
-                    removeTypingIndicator();
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'message-wrapper received';
-                    const bubble = document.createElement('div');
-                    bubble.className = 'message-bubble received';
-                    const ec = document.createElement('div');
-                    ec.className = 'ai-content';
-                    ec.textContent = '⚠️ Üzgünüm abi, hata: ' + (err.message || 'Bilinmeyen');
-                    bubble.appendChild(ec);
-                    addCopyButton(wrapper, bubble, 'received');
-                    wrapper.appendChild(bubble);
-                    chatContainer.appendChild(wrapper);
-                    saveMessages();
-                }
+                appendTypingIndicator(); try { const imageQuery = getImageSearchQuery(query); const promises = [
+                        getInternetContext(query)
+                    ]; if (imageQuery) promises.push(callTavilyImages(imageQuery)); else promises.push(Promise.resolve(
+                        null)); const [ctx, imageUrls] = await Promise.all(promises); if (ctx && ctx.rateLimited) {
+                        removeTypingIndicator(); const w2 = document.createElement('div');
+                    w2.className = 'message-wrapper received'; const b2 = document.createElement('div');
+                    b2.className = 'message-bubble received'; const ec2 = document.createElement('div');
+                    ec2.className = 'ai-content';
+                    ec2.textContent = '⏳ Abi TinyFish kotası doldu, 12 saniye sonra tekrar dener misin?';
+                    b2.appendChild(ec2);
+                    addCopyButton(w2, b2, 'received');
+                    w2.appendChild(b2);
+                    chatContainer.appendChild(w2);
+                    saveMessagesToFirebase();
+                    isProcessing = false;
+                    userInput.blur();
+                    resizeTextarea();
+                    updateScrollBtn(); return; } const reply = await callGroq(query, ctx);
+                removeTypingIndicator(); const final = cleanText(reply); const finalText = final.toUpperCase()
+                    .startsWith('ABİ') ? final : 'ABİ ' + final;
+                appendReceivedMessage(finalText, imageUrls && imageUrls.length > 0 ? imageUrls : null); const hist = JSON
+                    .parse(localStorage.getItem(HISTORY_KEY) || '[]');
+                hist.push({ role: 'user', text: query });
+                hist.push({ role: 'ai', text: finalText }); if (hist.length > 40) hist.splice(0, hist.length - 40);
+                localStorage.setItem(HISTORY_KEY, JSON.stringify(hist)); } catch (err) { console.error('Hata:', err);
+                    removeTypingIndicator(); const w3 = document.createElement('div');
+                w3.className = 'message-wrapper received'; const b3 = document.createElement('div');
+                b3.className = 'message-bubble received'; const ec3 = document.createElement('div');
+                ec3.className = 'ai-content';
+                ec3.textContent = '⚠️ Üzgünüm abi, hata: ' + (err.message || 'Bilinmeyen');
+                b3.appendChild(ec3);
+                addCopyButton(w3, b3, 'received');
+                w3.appendChild(b3);
+                chatContainer.appendChild(w3);
+                saveMessagesToFirebase(); }
                 isProcessing = false;
                 userInput.blur();
                 resizeTextarea();
-                updateScrollBtn();
-                startCooldown();
-            }
-
-            function resizeTextarea() {
-                userInput.style.height = 'auto';
-                userInput.style.height = Math.min(userInput.scrollHeight, 130) + 'px';
-            }
+                updateScrollBtn(); }
+            function resizeTextarea() { userInput.style.height = 'auto';
+                userInput.style.height = Math.min(userInput.scrollHeight, 130) + 'px'; }
 
             // ==================== XP MODAL ====================
-            function showXPClearConfirm() {
-                const exist = document.querySelector('.xp-overlay');
-                if (exist) exist.remove();
-                const overlay = document.createElement('div');
-                overlay.className = 'xp-overlay';
-                const dialog = document.createElement('div');
+            function showXPClearConfirm() { const exist = document.querySelector('.xp-overlay'); if (exist) exist.remove(); const
+                    overlay = document.createElement('div');
+                overlay.className = 'xp-overlay'; const dialog = document.createElement('div');
                 dialog.className = 'xp-dialog';
-                dialog.innerHTML = `
-                    <div class="xp-titlebar"><span>⚠️</span> Sohbeti Temizle</div>
-                    <div class="xp-body"><span class="xp-warn-icon">⚠️</span><span>Tüm sohbet geçmişini silmek istediğine emin misin?<br>Bu işlem geri alınamaz.</span></div>
-                    <div class="xp-buttons">
-                        <button class="xp-btn ok" id="xpOkBtn">Tamam</button>
-                        <button class="xp-btn cancel" id="xpCancelBtn">İptal</button>
-                    </div>`;
+                dialog.innerHTML =
+                    `<div class="xp-titlebar"><span>⚠️</span> Sohbeti Temizle</div><div class="xp-body"><span class="xp-warn-icon">⚠️</span><span>Tüm sohbet geçmişini silmek istediğine emin misin?<br>Bu işlem geri alınamaz.</span></div><div class="xp-buttons"><button class="xp-btn ok" id="xpOkBtn">Tamam</button><button class="xp-btn cancel" id="xpCancelBtn">İptal</button></div>`;
                 overlay.appendChild(dialog);
-                document.body.appendChild(overlay);
-                const ok = dialog.querySelector('#xpOkBtn');
-                const cancel = dialog.querySelector('#xpCancelBtn');
-                const close = () => overlay.remove();
+                document.body.appendChild(overlay); const ok = dialog.querySelector('#xpOkBtn'); const cancel = dialog
+                    .querySelector('#xpCancelBtn'); const close = () => overlay.remove();
                 cancel.addEventListener('click', close);
                 overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
-                ok.addEventListener('click', () => {
-                    chatContainer.querySelectorAll('.message-wrapper').forEach(w => w.remove());
+                ok.addEventListener('click', () => { chatContainer.querySelectorAll('.message-wrapper').forEach(w => w
+                        .remove());
                     localStorage.removeItem(STORAGE_KEY);
                     localStorage.removeItem(HISTORY_KEY);
-                    localStorage.removeItem(IMG_CACHE_KEY);
-                    if (!chatContainer.querySelector('#placeholderMsg')) {
-                        const ph = document.createElement('div');
+                    localStorage.removeItem(IMG_CACHE_KEY); if (chatId) { db.ref('chats/' + chatId).remove().catch(
+                        () => {}); } if (!chatContainer.querySelector('#placeholderMsg')) { const ph = document
+                            .createElement('div');
                         ph.id = 'placeholderMsg';
                         ph.style.cssText =
                             'text-align:center;color:#bbb;padding:40px 20px;font-size:13px;line-height:1.5;';
                         ph.textContent = '👋 Selam abi!\nSorunu yaz, Groq cevaplasın.';
-                        chatContainer.appendChild(ph);
-                    }
+                        chatContainer.appendChild(ph); }
                     scrollBottomBtn.classList.remove('visible');
-                    close();
-                });
+                    close(); });
                 dialog.addEventListener('keydown', e => { if (e.key === 'Escape') close(); if (e.key === 'Enter') ok
                         .click(); });
-                setTimeout(() => ok.focus(), 100);
-            }
+                setTimeout(() => ok.focus(), 100); }
 
             // ==================== EVENTLER ====================
             sendBtn.addEventListener('click', handleSend);
@@ -1599,14 +1434,11 @@ function appendSentMessage(text, save = true) {
                 scrollBottomBtn.classList.remove('visible'); });
             window.addEventListener('resize', updateScrollBtn);
 
-            function init() { loadMessages();
-                scrollToBottom(false);
-                resizeTextarea();
-                updateScrollBtn(); }
-            window.addEventListener('beforeunload', () => saveMessages());
-            setInterval(() => saveMessages(), 30000);
+            function init() { initFirebaseChat().then(() => { scrollToBottom(false);
+                    resizeTextarea();
+                    updateScrollBtn(); }); }
             init();
-            console.log('🤖 GroqBot v9 hazır abi!');
+            console.log('🤖 GroqBot v10 hazır abi! Firebase + TinyFish Rate Limit korumalı');
         })();
     </script>
 </body>
