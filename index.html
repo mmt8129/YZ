@@ -894,14 +894,20 @@
 }
 
             async function saveMessagesToFirebase() {
-                if (!chatId) return;
-                const messages = collectMessages();
-                try {
-                    await db.ref('chats/' + chatId + '/messages').set(messages);
-                } catch (e) {
-                    console.warn('Firebase kayıt hatası:', e);
-                }
-            }
+    const id = localStorage.getItem('groqbot_fb_chatId');
+    if (!id) {
+        console.warn('⚠️ chatId yok, Firebase kaydı atlanıyor');
+        return;
+    }
+    const messages = collectMessages();
+    console.log('💾 Firebase kayıt:', id, messages.length + ' mesaj');
+    try {
+        await db.ref('chats/' + id + '/messages').set(messages);
+        console.log('✅ Firebase kayıt başarılı');
+    } catch (e) {
+        console.warn('Firebase kayıt hatası:', e);
+    }
+}
 
             async function loadFirebaseMessages() {
                 if (!chatId) return;
