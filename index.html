@@ -1470,13 +1470,6 @@
             window.addEventListener('resize', updateScrollBtn);
 
           async function init() {
-    // Firebase'in hazır olmasını bekle
-    await new Promise(resolve => {
-        firebase.database().ref('.info/connected').on('value', snap => {
-            if (snap.val() === true) resolve();
-        });
-    });
-    
     chatId = localStorage.getItem('groqbot_fb_chatId');
     if (!chatId) {
         const newRef = db.ref('chats').push();
@@ -1484,25 +1477,24 @@
         localStorage.setItem('groqbot_fb_chatId', chatId);
     }
     
-    if (chatId) {
-        try {
-            const snap = await db.ref('chats/' + chatId + '/messages').once('value');
-            const data = snap.val();
-            console.log('📥 Firebase mesajlar:', data);
-            if (data && Array.isArray(data) && data.length > 0) {
-                chatContainer.querySelectorAll('.message-wrapper').forEach(w => w.remove());
-                const ph = document.getElementById('placeholderMsg');
-                if (ph) ph.remove();
-                data.forEach(msg => {
-                    if (msg.type === 'sent') appendSentMessage(msg.textContent, false);
-                    else appendReceivedFromStorage(msg);
-                });
-            }
-        } catch (e) {
-            console.warn('Firebase yükleme hatası:', e);
+    // Aynen manuel çekmedeki gibi
+    const id = localStorage.getItem('groqbot_fb_chatId');
+    if (id) {
+        const snap = await firebase.database().ref('chats/' + id + '/messages').once('value');
+        const data = snap.val();
+        console.log('📥 Firebase mesajlar:', data);
+        if (data && Array.isArray(data) && data.length > 0) {
+            chatContainer.querySelectorAll('.message-wrapper').forEach(w => w.remove());
+            const ph = document.getElementById('placeholderMsg');
+            if (ph) ph.remove();
+            data.forEach(msg => {
+                if (msg.type === 'sent') appendSentMessage(msg.textContent, false);
+                else appendReceivedFromStorage(msg);
+            });
+            scrollToBottom(false);
         }
     }
-    scrollToBottom(false);
+    
     resizeTextarea();
     updateScrollBtn();
 }
