@@ -1470,13 +1470,20 @@
             window.addEventListener('resize', updateScrollBtn);
 
           async function init() {
+    // Firebase'in hazır olmasını bekle
+    await new Promise(resolve => {
+        firebase.database().ref('.info/connected').on('value', snap => {
+            if (snap.val() === true) resolve();
+        });
+    });
+    
     chatId = localStorage.getItem('groqbot_fb_chatId');
     if (!chatId) {
         const newRef = db.ref('chats').push();
         chatId = newRef.key;
         localStorage.setItem('groqbot_fb_chatId', chatId);
     }
-    // Firebase'den mesajları çek
+    
     if (chatId) {
         try {
             const snap = await db.ref('chats/' + chatId + '/messages').once('value');
