@@ -884,15 +884,13 @@
             }
 
             // ==================== FIREBASE İŞLEMLERİ ====================
-            async function initFirebaseChat() {
+ async function initFirebaseChat() {
     chatId = localStorage.getItem('groqbot_fb_chatId');
     if (!chatId) {
         const newRef = db.ref('chats').push();
         chatId = newRef.key;
         localStorage.setItem('groqbot_fb_chatId', chatId);
-        return;
     }
-    await loadFirebaseMessages();
 }
 
             async function saveMessagesToFirebase() {
@@ -1467,6 +1465,7 @@
 
            async function init() {
     await initFirebaseChat();
+    await loadFirebaseMessages();
     scrollToBottom(false);
     resizeTextarea();
     updateScrollBtn();
