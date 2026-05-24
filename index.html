@@ -912,20 +912,33 @@
                 db.ref('chats/' + chatId + '/messages').set(messages).catch(() => {});
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
             }
-            function loadFirebaseMessages() {
-                if (!chatId) return;
-                db.ref('chats/' + chatId + '/messages').once('value').then(snap => {
-                    const data = snap.val();
-                    if (data && Array.isArray(data)) {
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-                        loadMessagesFromStorage();
-                    } else {
-                        loadMessagesFromStorage();
-                    }
-                }).catch(() => {
-                    loadMessagesFromStorage();
-                });
-            }
+           async function loadFirebaseMessages() {
+    if (!chatId) return;
+    try {
+        const snap = await db.ref('chats/' + chatId + '/messages').once('value');
+        const data = snap.val();
+        if (data && Array.isArray(data) && data.length > 0) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            // Mevcut mesajları temizle
+            chatContainer.querySelectorAll('.message-wrapper').forEach(w => w.remove());
+            const ph = document.getElementById('placeholderMsg');
+            if (ph) ph.remove();
+            // Mesajları yükle
+            data.forEach(msg => {
+                if (msg.type === 'sent') {
+                    appendSentMessage(msg.textContent, false);
+                } else {
+                    appendReceivedFromStorage(msg);
+                }
+            });
+            scrollToBottom(false);
+        } else {
+            loadMessagesFromStorage();
+        }
+    } catch (e) {
+        loadMessagesFromStorage();
+    }
+}
             function collectMessages() {
                 const messages = [];
                 chatContainer.querySelectorAll('.message-wrapper').forEach(w => {
@@ -1434,9 +1447,13 @@
                 scrollBottomBtn.classList.remove('visible'); });
             window.addEventListener('resize', updateScrollBtn);
 
-            function init() { initFirebaseChat().then(() => { scrollToBottom(false);
-                    resizeTextarea();
-                    updateScrollBtn(); }); }
+            function init() {
+    initFirebaseChat().then(() => {
+        scrollToBottom(false);
+        resizeTextarea();
+        updateScrollBtn();
+    });
+}
             init();
             console.log('🤖 GroqBot v10 hazır abi! Firebase + TinyFish Rate Limit korumalı');
         })();
