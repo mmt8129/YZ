@@ -1283,7 +1283,7 @@
                     await fetch(`${PROXY_URL}?url=${encodeURIComponent(targetUrl)}`, { method: 'GET',
                         headers: { 'X-API-Key': TINYFISH_API_KEY } }); if (res.status === 429) { console.warn(
                         '⚠️ TinyFish kota aşımı');
-                    return { results: [], rateLimited: true }; } if (!res.ok) return { results: [] }; return await res
+                    startCooldown(); return { results: [], rateLimited: true }; } if (!res.ok) return { results: [] }; return await res
                     .json(); } catch (e) { return { results: [] }; } }
             async function callTinyFishFetch(url) { try { const targetUrl = `https://api.fetch.tinyfish.ai`; const res =
                     await fetch(`${PROXY_URL}?url=${encodeURIComponent(targetUrl)}`, { method: 'POST',
